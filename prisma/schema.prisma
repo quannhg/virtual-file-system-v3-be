@@ -21,7 +21,7 @@ model User {
   password       String   @db.VarChar(511)
   firstName      String   @db.VarChar(255)
   lastName       String   @db.VarChar(255)
-  githubUsername String?   @db.VarChar(255)
+  githubUsername String?  @db.VarChar(255)
   phone          String?  @db.VarChar(255)
   birthdate      Int?
   avatarUrl      String?  @db.VarChar(255)
@@ -30,6 +30,29 @@ model User {
 
   joinedAt Int
   leaveAt  Int?
+}
+
+model File {
+  path      String
+  type      FileType
+  createdAt DateTime  @default(now())
+  Content   Content[]
+
+  @@id([path, type])
+}
+
+model Content {
+  path String
+  type FileType
+  data String
+  file File     @relation(fields: [path, type], references: [path, type])
+
+  @@id([path, type])
+}
+
+enum FileType {
+  RAW_FILE
+  DIRECTORY
 }
 
 enum Gender {
