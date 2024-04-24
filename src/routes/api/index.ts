@@ -1,5 +1,5 @@
-import { changeDirectory, createFileDirectory, showFileContent } from '@handlers';
-import { ChangeDirectoryQueryStrings, CreateFileDirectoryBody, ShowFileQueryStrings } from '@dtos/in';
+import { changeDirectory, createFileDirectory, listDirectoryItems, showFileContent } from '@handlers';
+import { PathQueryStrings, CreateFileDirectoryBody } from '@dtos/in';
 import { createRoute } from '@utils';
 import { Type } from '@sinclair/typebox';
 import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
@@ -11,7 +11,7 @@ export const apiRoute = createRoute('Api', [
         url: '/cd',
         schema: {
             summary: 'Change current directory',
-            querystring: ChangeDirectoryQueryStrings,
+            querystring: PathQueryStrings,
             response: {
                 200: ChangeDirectoryResult,
                 400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
@@ -37,12 +37,25 @@ export const apiRoute = createRoute('Api', [
         url: '/cat',
         schema: {
             summary: 'Retrieve content of the file',
-            querystring: ShowFileQueryStrings,
+            querystring: PathQueryStrings,
             response: {
                 200: ShowFileContentResult,
                 400: Type.Object({ message: Type.String({ default: FILE_NOT_FOUND }) })
             }
         },
         handler: showFileContent
+    },
+    {
+        method: 'GET',
+        url: '/ls',
+        schema: {
+            summary: 'List all items in directory',
+            querystring: PathQueryStrings,
+            response: {
+                200: ShowFileContentResult,
+                400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
+            }
+        },
+        handler: listDirectoryItems
     }
 ]);

@@ -1,12 +1,12 @@
 import { logger } from '@configs';
 import { DIRECTORY_NOT_FOUND, PATH_IS_REQUIRED } from '@constants';
-import { ChangeDirectoryQueryStrings } from '@dtos/in';
+import { PathQueryStrings } from '@dtos/in';
 import { ChangeDirectoryResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 
-export const changeDirectory: Handler<ChangeDirectoryResult, { Querystring: ChangeDirectoryQueryStrings }> = async (req, res) => {
+export const changeDirectory: Handler<ChangeDirectoryResult, { Querystring: PathQueryStrings }> = async (req, res) => {
     const path = req.query.path;
 
     if (!path) {

@@ -5,4 +5,5 @@
 export * from './error.handler';
 export * from './api/changeDirectory.handler';
 export * from './api/createFileDirectory.handler';
+export * from './api/listDirectoryItems.handler';
 export * from './api/showFileContent.handler';

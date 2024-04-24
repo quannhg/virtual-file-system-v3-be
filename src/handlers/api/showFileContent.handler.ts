@@ -1,11 +1,11 @@
 import { logger } from '@configs';
 import { FILE_NOT_FOUND, PATH_IS_REQUIRED } from '@constants';
-import { ShowFileQueryStrings } from '@dtos/in';
+import { PathQueryStrings } from '@dtos/in';
 import { ShowFileContentResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
 
-export const showFileContent: Handler<ShowFileContentResult, { Querystring: ShowFileQueryStrings }> = async (req, res) => {
+export const showFileContent: Handler<ShowFileContentResult, { Querystring: PathQueryStrings }> = async (req, res) => {
     const path = req.query.path;
 
     if (!path) {

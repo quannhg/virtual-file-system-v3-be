@@ -16,23 +16,20 @@ datasource db {
 }
 
 model File {
-  path      String
+  path      String    @id
   type      FileType
   createdAt DateTime  @default(now())
   Content   Content[]
 
-  @@id([path, type])
   @@fulltext([path])
 }
 
 model Content {
-  path String
-  //TODO: remove unnesscessary file type in content
-  type FileType
+  path String @id
   data String
-  file File     @relation(fields: [path, type], references: [path, type])
+  file File   @relation(fields: [path], references: [path])
 
-  @@id([path, type])
+  @@fulltext([path])
 }
 
 enum FileType {

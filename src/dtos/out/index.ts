@@ -4,4 +4,5 @@
 
 export * from './changeDirectory.dto';
 export * from './createFileDirectory.dto';
+export * from './listDirectoryItem.dto';
 export * from './showFileContent.dto';
