@@ -1,31 +1,32 @@
 version: "3.5"
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres
+  mysql:
+    image: mysql:latest
+    container_name: mysql
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - 5432:5432
+      - 3306:3306
     volumes:
-      - postgres_db:/var/lib/postgresql/data
+      - mysql_db:/var/lib/mysql
     restart: always
 
   fastify:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: ghcr.io/ticklabvn/tickapp-be:latcest
+    image: ghcr.io/ticklabvn/tickapp-be:latest
     container_name: fastify_template
     ports:
       - 8080:8080
     volumes:
       - .env:/app/.env
     depends_on:
-      - postgres
+      - mysql
     restart: always
 
 volumes:
-  postgres_db:
+  mysql_db:
