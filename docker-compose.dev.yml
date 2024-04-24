@@ -2,7 +2,7 @@ version: "3.5"
 services:
   postgres:
     image: postgres:15
-    container_name: tickapp-postgres
+    container_name: virtual-file-system-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

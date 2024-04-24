@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: ghcr.io/ticklabvn/tickapp-be:latest
+    image: ghcr.io/ticklabvn/tickapp-be:latcest
     container_name: fastify_template
     ports:
       - 8080:8080

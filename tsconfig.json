@@ -36,7 +36,6 @@
       "@configs/*": ["src/configs/*"],
       "@repositories": ["src/repositories"],
       "@utils": ["src/utils"],
-      "@hooks": ["src/hooks"],
       "@interfaces": ["src/interfaces"]
     }
   },

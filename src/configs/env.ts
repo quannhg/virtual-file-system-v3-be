@@ -7,9 +7,9 @@ export const envs = cleanEnv(process.env, {
         devDefault: 'development',
         choices: ['development', 'test', 'production', 'staging']
     }),
-    TEST_POSTGRES_USER: str({ default: 'ticklabvn' }),
+    TEST_POSTGRES_USER: str({ default: 'mihon' }),
     TEST_POSTGRES_PASSWORD: str({ default: '123456789' }),
-    TEST_POSTGRES_DB: str({ default: 'tickflow' }),
+    TEST_POSTGRES_DB: str({ default: 'virtual file system ' }),
 
     JWT_SECRET: str(),
     COOKIE_SECRET: str(),

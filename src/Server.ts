@@ -1,7 +1,6 @@
 import fastify, { FastifyInstance } from "fastify";
 import type { FastifyCookieOptions } from "@fastify/cookie";
 import { envs, logger, swaggerConfig, swaggerUIConfig } from "@configs";
-import { authRoute } from "./routes/auth";
 import { customErrorHandler } from "@handlers";
 import { apiRoute } from "./routes/api";
 
@@ -37,7 +36,6 @@ export function createServer(config: ServerConfig): FastifyInstance {
 
   app.setErrorHandler(customErrorHandler);
 
-  app.register(authRoute, { prefix: "/auth" });
   app.register(apiRoute, { prefix: "/api" });
 
   const start = async () => {

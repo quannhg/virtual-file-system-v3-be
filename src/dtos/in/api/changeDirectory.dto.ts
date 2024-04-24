@@ -1,6 +1,7 @@
 import { Static, Type } from '@sinclair/typebox';
 
-export const ChangeDirectoryDto = Type.Object({
-    path: Type.String()
+export const ChangeDirectoryParams = Type.Object({
+    path: Type.String({ minLength: 1 })
 });
-export type ChangeDirectoryDto = Static<typeof ChangeDirectoryDto>;
+
+export type ChangeDirectoryParams = Static<typeof ChangeDirectoryParams>;

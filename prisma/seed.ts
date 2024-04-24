@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, FileType } from '@prisma/client';
 import { hashSync } from 'bcrypt';
 import moment from 'moment';
 
@@ -33,6 +33,38 @@ async function generateData() {
             phone: '0373395726',
             joinedAt: currentTime
         }
+    });
+
+    await prisma.file.create({
+        data: {
+            path: 'example/path/to/rawfile.txt',
+            type: FileType.RAW_FILE,
+            Content: {
+                create: {
+                    data: 'This is the content of the raw file.'
+                }
+            }
+        }
+    });
+
+    await prisma.file.create({
+        data: {
+            path: 'example/path/to/directory',
+            type: FileType.DIRECTORY
+        }
+    });
+
+    await prisma.file.createMany({
+        data: [
+            {
+                path: 'example/path/to/anotherfile.txt',
+                type: FileType.RAW_FILE
+            },
+            {
+                path: 'example/path/to/subdirectory',
+                type: FileType.DIRECTORY
+            }
+        ]
     });
 
     process.exit(0);

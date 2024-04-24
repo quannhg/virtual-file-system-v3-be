@@ -1,1 +1,1 @@
-type HandlerTag = 'Api' | 'Auth';
+type HandlerTag = 'Api';
