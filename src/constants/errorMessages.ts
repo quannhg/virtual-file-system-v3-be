@@ -1,6 +1,9 @@
-export const TRY_LATER = 'Some errors occured ! Please try later !';
+export const TRY_LATER = 'Some errors ocurred ! Please try later !';
 
-export const PATH_NOT_FOUND = 'No directory found with the provided path!';
+export const DIRECTORY_NOT_FOUND = 'No directory found with the provided path!';
+export const FILE_NOT_FOUND = 'No file found with the provided path!';
+
+export const PATH_IS_REQUIRED = 'Path is required.';
 
 export const NOT_FOUND_GENERIC = 'Not found !';
 export enum PrismaErrCode {

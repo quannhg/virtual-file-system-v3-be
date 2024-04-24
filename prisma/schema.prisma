@@ -27,6 +27,7 @@ model File {
 
 model Content {
   path String
+  //TODO: remove unnesscessary file type in content
   type FileType
   data String
   file File     @relation(fields: [path, type], references: [path, type])

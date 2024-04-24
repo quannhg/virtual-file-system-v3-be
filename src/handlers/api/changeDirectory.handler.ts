@@ -1,5 +1,5 @@
 import { logger } from '@configs';
-import { PATH_NOT_FOUND } from '@constants';
+import { DIRECTORY_NOT_FOUND, PATH_IS_REQUIRED } from '@constants';
 import { ChangeDirectoryQueryStrings } from '@dtos/in';
 import { ChangeDirectoryResult } from '@dtos/out';
 import { Handler } from '@interfaces';
@@ -10,7 +10,7 @@ export const changeDirectory: Handler<ChangeDirectoryResult, { Querystring: Chan
     const path = req.query.path;
 
     if (!path) {
-        return res.send({ message: 'Successfully change directory' });
+        return res.status(400).send({ error: PATH_IS_REQUIRED });
     }
 
     try {
@@ -23,7 +23,7 @@ export const changeDirectory: Handler<ChangeDirectoryResult, { Querystring: Chan
         if (file) {
             return res.send({ message: 'Successfully change directory' });
         } else {
-            return res.badRequest(PATH_NOT_FOUND);
+            return res.badRequest(DIRECTORY_NOT_FOUND);
         }
     } catch (err) {
         logger.error(err);
