@@ -6,8 +6,12 @@ import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 
-export const changeDirectory: Handler<ChangeDirectoryResult, { Params: ChangeDirectoryParams }> = async (req, res) => {
-    const path = req.params.path;
+export const changeDirectory: Handler<ChangeDirectoryResult, { Querystring: ChangeDirectoryParams }> = async (req, res) => {
+    const path = req.query.path;
+
+    if (!path) {
+        return res.send({ message: 'Successfully change directory' });
+    }
 
     try {
         const file = await prisma.file.findFirst({
@@ -17,7 +21,7 @@ export const changeDirectory: Handler<ChangeDirectoryResult, { Params: ChangeDir
         });
 
         if (file) {
-            return { message: 'Successfully change directory' };
+            return res.send({ message: 'Successfully change directory' });
         } else {
             return res.badRequest(PATH_NOT_FOUND);
         }

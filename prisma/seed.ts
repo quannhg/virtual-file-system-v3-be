@@ -37,7 +37,7 @@ async function generateData() {
 
     await prisma.file.create({
         data: {
-            path: 'example/path/to/rawfile.txt',
+            path: '/example/path/to/rawfile.txt',
             type: FileType.RAW_FILE,
             Content: {
                 create: {
@@ -49,7 +49,7 @@ async function generateData() {
 
     await prisma.file.create({
         data: {
-            path: 'example/path/to/directory',
+            path: '/example/path/to/directory',
             type: FileType.DIRECTORY
         }
     });
@@ -57,11 +57,11 @@ async function generateData() {
     await prisma.file.createMany({
         data: [
             {
-                path: 'example/path/to/anotherfile.txt',
+                path: '/example/path/to/anotherfile.txt',
                 type: FileType.RAW_FILE
             },
             {
-                path: 'example/path/to/subdirectory',
+                path: '/example/path/to/subdirectory',
                 type: FileType.DIRECTORY
             }
         ]
