@@ -14,15 +14,16 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
     }
 
     try {
-        const existingPath = await prisma.file.findFirst({
-            where: {
-                // TODO: check case file: a/b/c, create folder at a/b/c/d
-                OR: [{ path: newPath }, { type: FileType.RAW_FILE, path: { startsWith: newPath } }]
-            }
-        });
+        const existingPathResult: { path: string }[] = await prisma.$queryRaw`
+            SELECT path
+            FROM File 
+            WHERE (path LIKE CONCAT(${newPath}, '%')) OR 
+            (type = ${FileType.RAW_FILE} AND ${newPath} LIKE CONCAT(path, '%'))`;
 
-        if (existingPath) {
-            return res.badRequest(`File or directory already exists at path: ${newPath}`);
+        if (existingPathResult.length > 0) {
+            const existingPath = newPath.length > existingPathResult[0].path.length ? existingPathResult[0].path : newPath;
+
+            return res.badRequest(`File or directory already exists at path: ${existingPath}`);
         }
 
         if (data)
