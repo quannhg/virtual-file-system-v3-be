@@ -26,12 +26,21 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
     const path = rawPath.endsWith('/') ? rawPath : rawPath + '/';
 
     try {
+        const exactFile = await prisma.file.findFirst({
+            where: {
+                path: path.slice(0, -1),
+                type: FileType.RAW_FILE
+            }
+        });
+        if (exactFile) {
+            return res.status(400).send({ message: 'Path must refer to a directory, not a file' });
+        }
+
         const folderExist = await prisma.file.findFirst({
             where: {
                 path: { startsWith: path.slice(0, -1) }
             }
         });
-
         if (!folderExist) {
             return res.status(400).send({ message: DIRECTORY_NOT_FOUND });
         }
