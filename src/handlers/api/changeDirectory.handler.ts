@@ -10,7 +10,7 @@ export const changeDirectory: Handler<SingleMessageResult, { Querystring: PathQu
     const path = req.query.path;
 
     if (!path) {
-        return res.badRequest(PATH_IS_REQUIRED);
+        return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
 
     try {

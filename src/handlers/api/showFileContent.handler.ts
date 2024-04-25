@@ -9,7 +9,7 @@ export const showFileContent: Handler<ShowFileContentResult, { Querystring: Path
     const path = req.query.path;
 
     if (!path) {
-        return res.status(400).send({ error: PATH_IS_REQUIRED });
+        return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
 
     try {

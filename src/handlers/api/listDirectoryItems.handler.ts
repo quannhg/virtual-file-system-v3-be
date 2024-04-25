@@ -1,19 +1,40 @@
 import { logger } from '@configs';
-import { PATH_IS_REQUIRED } from '@constants';
+import { DIRECTORY_NOT_FOUND } from '@constants';
 import { PathQueryStrings } from '@dtos/in';
-import { ListDirectoryItems } from '@dtos/out';
+import { ListDirectoryItem } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
+import { getLastSegment } from '@utils';
 
-export const listDirectoryItems: Handler<ListDirectoryItems, { Querystring: PathQueryStrings }> = async (req, res) => {
-    const path = req.query.path;
+const extractDirectItemPaths = (items: ItemWithContent[], path: string): Set<string> => {
+    const directItems = new Set<string>();
+    const amountFolderTraverse = path.split('/').length;
 
-    if (!path) {
-        return res.status(400).send({ error: PATH_IS_REQUIRED });
+    for (const item of items) {
+        const directItemPath = item.path.split('/').slice(0, amountFolderTraverse).join('/');
+        directItems.add(directItemPath);
     }
 
+    return directItems;
+};
+
+export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: PathQueryStrings }> = async (req, res) => {
+    const rawPath = req.query.path;
+
+    const path = rawPath.endsWith('/') ? rawPath : rawPath + '/';
+
     try {
+        const folderExist = await prisma.content.findFirst({
+            where: {
+                path: { startsWith: path }
+            }
+        });
+
+        if (!folderExist) {
+            return res.status(400).send({ message: DIRECTORY_NOT_FOUND });
+        }
+
         const items = await prisma.file.findMany({
             where: {
                 path: { startsWith: path }
@@ -26,52 +47,49 @@ export const listDirectoryItems: Handler<ListDirectoryItems, { Querystring: Path
             }
         });
 
-        const directItems = new Set<string>();
-        const amountFolderTraverse = path.split('/').length;
+        const directItems = extractDirectItemPaths(items, path);
 
-        for (const item of items) {
-            const directItemPath = item.path
-                .split('/')
-                .slice(0, amountFolderTraverse + 1)
-                .join('/');
-            directItems.add(directItemPath);
-        }
+        const result: ListDirectoryItem[] = [];
 
-        const result: ListDirectoryItems = [];
-
-        for (const path of directItems) {
+        for (const itemPath of directItems) {
             try {
-                const adjacentItem = await prisma.file.findFirst({
-                    where: { path },
+                const directFile = await prisma.file.findFirst({
+                    where: { path: itemPath, type: FileType.RAW_FILE },
                     select: {
                         path: true,
                         createdAt: true,
-                        type: true,
                         Content: { select: { data: true } }
                     }
                 });
 
-                if (adjacentItem) {
-                    const adjacentItemName =
-                        adjacentItem.path.split('/').slice(-1)[0] + (adjacentItem.type === FileType.DIRECTORY ? '/' : '');
-                    let size = 0;
+                const itemName = getLastSegment(itemPath);
 
-                    if (adjacentItem.type === FileType.DIRECTORY) {
-                        const folderSizeResult: { size: number }[] =
-                            await prisma.$queryRaw`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE ${adjacentItem.path}%`;
-                        size = folderSizeResult[0]?.size || 0;
-                    } else {
-                        size = adjacentItem.Content.length > 0 ? adjacentItem.Content[0].data.length : 0;
-                    }
+                if (directFile) {
+                    result.push({
+                        name: itemName,
+                        createAt: directFile.createdAt,
+                        size: directFile.Content.length > 0 ? directFile.Content[0].data.length : 0
+                    });
+                } else {
+                    const folderSizeResult: { size: string }[] =
+                        await prisma.$queryRaw`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE CONCAT(${itemPath}, '/', '%')`;
+
+                    const firstFolderItem = await prisma.file.findFirst({
+                        where: {
+                            path: { startsWith: itemPath },
+                            type: FileType.DIRECTORY
+                        },
+                        orderBy: { createdAt: 'asc' }
+                    });
 
                     result.push({
-                        name: adjacentItemName,
-                        createAt: adjacentItem.createdAt,
-                        size
+                        name: itemName + '/',
+                        createAt: firstFolderItem?.createdAt || new Date(0),
+                        size: Number(folderSizeResult[0]?.size) || 0
                     });
                 }
             } catch (error) {
-                logger.error(`Error processing item at path ${path}: ${error}`);
+                logger.error(`Error processing item at path ${itemPath}: ${error}`);
             }
         }
 

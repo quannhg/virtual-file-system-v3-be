@@ -1,5 +1,4 @@
 import { logger } from '@configs';
-import { FILE_OR_DIRECTORY_NOT_FOUND } from '@constants';
 import { CreateFileDirectoryBody } from '@dtos/in';
 import { CreateFileDirectoryResult } from '@dtos/out';
 import { Handler } from '@interfaces';
@@ -7,28 +6,29 @@ import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 
 export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: CreateFileDirectoryBody }> = async (req, res) => {
-    const { path, data } = req.body;
+    const { path: newPath, data } = req.body;
 
-    const isValidPath = /^[a-zA-Z0-9 _/-]+$/.test(path || '') && path.startsWith('/');
+    const isValidPath = /^[a-zA-Z0-9 _/-]+$/.test(newPath || '') && newPath.startsWith('/');
     if (!isValidPath) {
-        return res.badRequest(`Invalid path: ${path}`);
+        return res.badRequest(`Invalid path: ${newPath}`);
     }
 
     try {
-        const existingFile = await prisma.file.findUnique({
+        const existingPath = await prisma.file.findFirst({
             where: {
-                path: path
+                // TODO: check case file: a/b/c, create folder at a/b/c/d
+                OR: [{ path: newPath }, { type: FileType.RAW_FILE, path: { startsWith: newPath } }]
             }
         });
 
-        if (existingFile) {
-            return res.notFound(FILE_OR_DIRECTORY_NOT_FOUND);
+        if (existingPath) {
+            return res.badRequest(`File or directory already exists at path: ${newPath}`);
         }
 
         if (data)
             await prisma.file.create({
                 data: {
-                    path: path,
+                    path: newPath,
                     type: FileType.RAW_FILE,
                     Content: {
                         create: {
@@ -40,7 +40,7 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
         else
             await prisma.file.create({
                 data: {
-                    path: path,
+                    path: newPath,
                     type: FileType.DIRECTORY
                 }
             });
