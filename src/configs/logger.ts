@@ -14,6 +14,7 @@ const errorSerialize = (err: FastifyError) => {
 };
 
 const loggerConfig: PinoLoggerOptions = {
+    level: envs.isDevelopment ? 'debug' : 'info',
     transport: envs.isDev
         ? {
               target: 'pino-pretty',
