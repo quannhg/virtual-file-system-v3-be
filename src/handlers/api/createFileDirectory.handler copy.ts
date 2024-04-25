@@ -5,16 +5,16 @@ import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
-import { cleanPath } from '@utils';
+import { cleanPath, validatePath } from '@utils';
 
 export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: CreateFileDirectoryBody }> = async (req, res) => {
     const { path: receivedPath, data } = req.body;
 
     const newPath = cleanPath(receivedPath);
 
-    const isValidPath = /^[a-zA-Z0-9 _/-]+$/.test(newPath || '') && newPath.startsWith('/');
-    if (!isValidPath) {
-        return res.badRequest(`Invalid path: ${newPath}`);
+    const validatePathResult = validatePath(newPath);
+    if (!validatePathResult.valid) {
+        return res.badRequest(validatePathResult.message);
     }
 
     try {

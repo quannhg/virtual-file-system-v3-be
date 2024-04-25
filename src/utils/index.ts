@@ -7,3 +7,4 @@ export * from './checkExistingPath';
 export * from './cleanPath';
 export * from './createRoute';
 export * from './getLastSegment';
+export * from './validatePath';
