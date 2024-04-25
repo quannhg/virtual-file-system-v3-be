@@ -1,51 +1,113 @@
 import { logger } from '@configs';
-import { FILE_OR_DIRECTORY_NOT_FOUND } from '@constants';
+import { FILE_NOT_FOUND, FILE_OR_DIRECTORY_NOT_FOUND } from '@constants';
 import { UpdateFileDirectoryBody } from '@dtos/in';
 import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
+import { cleanPath } from '@utils';
+import path from 'path';
+import { appendPath } from 'src/utils/appendPath';
+import { checkExistingPath } from 'src/utils/checkExistingPath';
 
 export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFileDirectoryBody }> = async (req, res) => {
-    const { oldPath, newPath, newData } = req.body;
+    const { oldPath: rawOldPath, newPath: rawNewPath, newData } = req.body;
+
+    const newPath = cleanPath(rawNewPath);
+    const oldPath = cleanPath(rawOldPath);
+
+    if (path.dirname(oldPath) !== path.dirname(newPath)) {
+        return res.badRequest('Update only supported change name of item at last segment! Using mv to change parent directory instead.');
+    }
 
     try {
-        const existingFile = await prisma.file.findUnique({
-            where: {
-                path: oldPath
-            }
-        });
-
-        if (!existingFile) {
-            return res.notFound(FILE_OR_DIRECTORY_NOT_FOUND);
-        }
-
-        const updateItem = await prisma.file.update({
-            where: {
-                path: oldPath
-            },
-            data: {
-                path: newPath
-            },
-            select: {
-                type: true
-            }
-        });
-
-        if (newData && updateItem.type === FileType.RAW_FILE) {
-            await prisma.content.updateMany({
+        if (newData) {
+            const updatedFile = await prisma.file.findFirst({
                 where: {
-                    path: newPath
+                    path: oldPath
                 },
-                data: {
-                    data: newData
+                select: {
+                    path: true,
+                    type: true
                 }
             });
-        } else if (newData) {
-            return res.badRequest('Cannot update data for a directory');
-        }
 
-        return res.send({ message: 'Successfully updated file/directory' });
+            if (!updatedFile) return res.notFound(FILE_NOT_FOUND);
+
+            if (updatedFile.type === FileType.DIRECTORY) {
+                return res.badRequest('Cannot add data to a directory. Only files can have data.');
+            }
+
+            if (oldPath !== newPath) {
+                const existingPath = await checkExistingPath(newPath);
+                if (existingPath) {
+                    return res.badRequest(`File or directory already exists at path: ${existingPath}`);
+                }
+            }
+
+            await prisma.$transaction(async (prisma) => {
+                await prisma.file.update({
+                    where: {
+                        path: oldPath
+                    },
+                    data: {
+                        path: newPath
+                    }
+                });
+
+                await prisma.content.upsert({
+                    where: {
+                        path: newPath
+                    },
+                    update: {
+                        data: newData
+                    },
+                    create: {
+                        path: newPath,
+                        data: newData
+                    }
+                });
+            });
+
+            return res.send({ message: 'Successfully updated file' });
+        } else {
+            const updateItems = await prisma.file.findMany({
+                where: {
+                    path: { startsWith: oldPath }
+                },
+                select: {
+                    path: true,
+                    type: true
+                }
+            });
+
+            if (updateItems.length === 0) {
+                return res.notFound(FILE_OR_DIRECTORY_NOT_FOUND);
+            }
+            
+            const existingPath = await checkExistingPath(newPath);
+            if (existingPath) {
+                return res.badRequest(`File or directory already exists at path: ${existingPath}`);
+            }
+
+            for (let i = 0; i < updateItems.length; i++) {
+                const item = updateItems[i];
+                const absoluteNewPath = appendPath(newPath, item.path.slice(oldPath.length, item.path.length));
+
+                await prisma.file.update({
+                    where: {
+                        path: item.path
+                    },
+                    data: {
+                        path: absoluteNewPath
+                    },
+                    select: {
+                        type: true
+                    }
+                });
+            }
+            return res.send({ message: 'Successfully updated file/directory' });
+        }
     } catch (err) {
         logger.error(err);
         return res.internalServerError();
