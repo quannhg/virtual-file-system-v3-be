@@ -6,6 +6,7 @@ import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 import { getLastSegment } from '@utils';
+import moment from 'moment';
 
 const extractDirectItemPaths = (items: ItemWithContent[], path: string): Set<string> => {
     const directItems = new Set<string>();
@@ -25,9 +26,9 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
     const path = rawPath.endsWith('/') ? rawPath : rawPath + '/';
 
     try {
-        const folderExist = await prisma.content.findFirst({
+        const folderExist = await prisma.file.findFirst({
             where: {
-                path: { startsWith: path }
+                path: { startsWith: path.slice(0, -1) }
             }
         });
 
@@ -67,7 +68,7 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
                 if (directFile) {
                     result.push({
                         name: itemName,
-                        createAt: directFile.createdAt,
+                        createAt: moment(directFile.createdAt).toString(),
                         size: directFile.Content.length > 0 ? directFile.Content[0].data.length : 0
                     });
                 } else {
@@ -84,7 +85,7 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
 
                     result.push({
                         name: itemName + '/',
-                        createAt: firstFolderItem?.createdAt || new Date(0),
+                        createAt: (firstFolderItem && moment(firstFolderItem.createdAt).toString()) || '0',
                         size: Number(folderSizeResult[0]?.size) || 0
                     });
                 }

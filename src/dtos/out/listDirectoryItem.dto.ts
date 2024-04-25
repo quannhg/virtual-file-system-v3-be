@@ -2,7 +2,7 @@ import { Static, Type } from '@sinclair/typebox';
 
 export const ListDirectoryItem = Type.Object({
     name: Type.String(),
-    createAt: Type.Date(),
+    createAt: Type.String(),
     size: Type.Integer()
 });
 

@@ -3,7 +3,7 @@ import { PathQueryStrings, CreateFileDirectoryBody, UpdateFileDirectoryBody } fr
 import { createRoute } from '@utils';
 import { Type } from '@sinclair/typebox';
 import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
-import { SingleMessageResult, CreateFileDirectoryResult, ShowFileContentResult, ListDirectoryItems } from '@dtos/out';
+import { SingleMessageResult, CreateFileDirectoryResult, ShowFileContentResult, ListDirectoryItem } from '@dtos/out';
 
 export const apiRoute = createRoute('Api', [
     {
@@ -52,7 +52,7 @@ export const apiRoute = createRoute('Api', [
             summary: 'List all items in directory',
             querystring: PathQueryStrings,
             response: {
-                200: Type.Array(ListDirectoryItems),
+                200: Type.Array(ListDirectoryItem),
                 400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
             }
         },
