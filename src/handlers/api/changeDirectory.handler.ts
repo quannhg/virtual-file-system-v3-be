@@ -1,16 +1,16 @@
 import { logger } from '@configs';
 import { DIRECTORY_NOT_FOUND, PATH_IS_REQUIRED } from '@constants';
 import { PathQueryStrings } from '@dtos/in';
-import { ChangeDirectoryResult } from '@dtos/out';
+import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 
-export const changeDirectory: Handler<ChangeDirectoryResult, { Querystring: PathQueryStrings }> = async (req, res) => {
+export const changeDirectory: Handler<SingleMessageResult, { Querystring: PathQueryStrings }> = async (req, res) => {
     const path = req.query.path;
 
     if (!path) {
-        return res.status(400).send({ error: PATH_IS_REQUIRED });
+        return res.badRequest(PATH_IS_REQUIRED);
     }
 
     try {
@@ -23,7 +23,7 @@ export const changeDirectory: Handler<ChangeDirectoryResult, { Querystring: Path
         if (file) {
             return res.send({ message: 'Successfully change directory' });
         } else {
-            return res.badRequest(DIRECTORY_NOT_FOUND);
+            return res.notFound(DIRECTORY_NOT_FOUND);
         }
     } catch (err) {
         logger.error(err);

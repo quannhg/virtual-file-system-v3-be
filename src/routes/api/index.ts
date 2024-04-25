@@ -1,9 +1,9 @@
-import { changeDirectory, createFileDirectory, listDirectoryItems, showFileContent } from '@handlers';
-import { PathQueryStrings, CreateFileDirectoryBody } from '@dtos/in';
+import { changeDirectory, createFileDirectory, listDirectoryItems, showFileContent, updateFileDirectory } from '@handlers';
+import { PathQueryStrings, CreateFileDirectoryBody, UpdateFileDirectoryBody } from '@dtos/in';
 import { createRoute } from '@utils';
 import { Type } from '@sinclair/typebox';
 import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
-import { ChangeDirectoryResult, CreateFileDirectoryResult, ShowFileContentResult } from '@dtos/out';
+import { SingleMessageResult, CreateFileDirectoryResult, ShowFileContentResult } from '@dtos/out';
 
 export const apiRoute = createRoute('Api', [
     {
@@ -13,7 +13,7 @@ export const apiRoute = createRoute('Api', [
             summary: 'Change current directory',
             querystring: PathQueryStrings,
             response: {
-                200: ChangeDirectoryResult,
+                200: SingleMessageResult,
                 400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
             }
         },
@@ -57,5 +57,18 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: listDirectoryItems
+    },
+    {
+        method: 'POST',
+        url: '/up',
+        schema: {
+            summary: 'Update file or directory',
+            body: UpdateFileDirectoryBody,
+            response: {
+                200: SingleMessageResult,
+                400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
+            }
+        },
+        handler: updateFileDirectory
     }
 ]);

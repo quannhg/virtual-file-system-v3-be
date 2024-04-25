@@ -1,4 +1,5 @@
 import { logger } from '@configs';
+import { FILE_OR_DIRECTORY_NOT_FOUND } from '@constants';
 import { CreateFileDirectoryBody } from '@dtos/in';
 import { CreateFileDirectoryResult } from '@dtos/out';
 import { Handler } from '@interfaces';
@@ -10,23 +11,18 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
 
     const isValidPath = /^[a-zA-Z0-9 _/-]+$/.test(path || '') && path.startsWith('/');
     if (!isValidPath) {
-        return res.status(400).send({ message: `Invalid path: ${path}` });
+        return res.badRequest(`Invalid path: ${path}`);
     }
 
     try {
-        const fileType = data ? FileType.RAW_FILE : FileType.DIRECTORY;
-
         const existingFile = await prisma.file.findUnique({
             where: {
-                path_type: {
-                    path: path,
-                    type: fileType
-                }
+                path: path
             }
         });
 
         if (existingFile) {
-            return res.status(400).send({ message: `File or directory already exists at path: ${path}` });
+            return res.notFound(FILE_OR_DIRECTORY_NOT_FOUND);
         }
 
         if (data)

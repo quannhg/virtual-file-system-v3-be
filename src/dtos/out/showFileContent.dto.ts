@@ -1,7 +1,7 @@
 import { Static, Type } from '@sinclair/typebox';
 
 export const ShowFileContentResult = Type.Object({
-    name: Type.String(),
+    data: Type.String()
 });
 
 export type ShowFileContentResult = Static<typeof ShowFileContentResult>;

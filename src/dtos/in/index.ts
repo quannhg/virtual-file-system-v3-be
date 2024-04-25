@@ -4,3 +4,4 @@
 
 export * from './createFileDirectory.dto';
 export * from './pathQueryString.dto';
+export * from './updateFileDirectory.dto';
