@@ -84,7 +84,7 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
             if (updateItems.length === 0) {
                 return res.notFound(FILE_OR_DIRECTORY_NOT_FOUND);
             }
-            
+
             const existingPath = await checkExistingPath(newPath);
             if (existingPath) {
                 return res.badRequest(`File or directory already exists at path: ${existingPath}`);
@@ -100,9 +100,6 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
                     },
                     data: {
                         path: absoluteNewPath
-                    },
-                    select: {
-                        type: true
                     }
                 });
             }

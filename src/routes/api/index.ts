@@ -2,11 +2,12 @@ import {
     changeDirectory,
     createFileDirectory,
     listDirectoryItems,
+    moveFileDirectory,
     removeFileDirectory,
     showFileContent,
     updateFileDirectory
 } from '@handlers';
-import { PathQueryStrings, CreateFileDirectoryBody, UpdateFileDirectoryBody, RemoveFileDirectory } from '@dtos/in';
+import { PathQueryStrings, CreateFileDirectoryBody, UpdateFileDirectoryBody, RemoveFileDirectory, MoveFileDirectoryBody } from '@dtos/in';
 import { createRoute } from '@utils';
 import { Type } from '@sinclair/typebox';
 import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
@@ -66,7 +67,7 @@ export const apiRoute = createRoute('Api', [
         handler: listDirectoryItems
     },
     {
-        method: 'POST',
+        method: 'PUT',
         url: '/up',
         schema: {
             summary: 'Update file or directory',
@@ -77,6 +78,19 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: updateFileDirectory
+    },
+    {
+        method: 'PUT',
+        url: '/mv',
+        schema: {
+            summary: 'Move files or directories',
+            body: MoveFileDirectoryBody,
+            response: {
+                200: SingleMessageResult,
+                400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
+            }
+        },
+        handler: moveFileDirectory
     },
     {
         method: 'DELETE',
