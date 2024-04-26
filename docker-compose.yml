@@ -1,8 +1,8 @@
 version: "3.5"
 services:
   mysql:
-    image: mysql:latest
-    container_name: mysql
+    image: mysql:8.0
+    container_name: virtual-file-system-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -18,7 +18,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    image: ghcr.io/ticklabvn/tickapp-be:latest
     container_name: fastify_template
     ports:
       - 8812:8080
