@@ -5,13 +5,16 @@ import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
+import { normalizePath } from '@utils';
 
 export const changeDirectory: Handler<SingleMessageResult, { Querystring: PathQueryStrings }> = async (req, res) => {
-    const path = req.query.path;
+    const { path: rawPath } = req.query;
 
-    if (!path) {
+    if (!rawPath) {
         return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
+
+    const path = normalizePath(rawPath);
 
     try {
         const file = await prisma.file.findFirst({

@@ -5,7 +5,7 @@ import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
-import { cleanPath } from '@utils';
+import { normalizePath } from '@utils';
 import path from 'path';
 import { appendPath } from 'src/utils/appendPath';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
@@ -13,8 +13,8 @@ import { checkExistingPath } from 'src/utils/checkExistingPath';
 export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFileDirectoryBody }> = async (req, res) => {
     const { oldPath: rawOldPath, newPath: rawNewPath, newData } = req.body;
 
-    const newPath = cleanPath(rawNewPath);
-    const oldPath = cleanPath(rawOldPath);
+    const newPath = normalizePath(rawNewPath);
+    const oldPath = normalizePath(rawOldPath);
 
     if (path.dirname(oldPath) !== path.dirname(newPath)) {
         return res.badRequest('Update only supported change name of item at last segment! Using mv to change parent directory instead.');

@@ -4,7 +4,7 @@
 
 export * from './appendPath';
 export * from './checkExistingPath';
-export * from './cleanPath';
+export * from './normalizePath';
 export * from './createRoute';
 export * from './getLastSegment';
 export * from './validatePath';

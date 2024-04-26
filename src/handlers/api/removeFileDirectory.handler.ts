@@ -3,7 +3,7 @@ import { RemoveFileDirectory } from '@dtos/in';
 import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
-import { cleanPath, getLastSegment } from '@utils';
+import { normalizePath, getLastSegment } from '@utils';
 
 export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: RemoveFileDirectory }> = async (req, res) => {
     try {
@@ -11,7 +11,7 @@ export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: Re
         const errorMessages = [];
 
         for (const path of paths) {
-            const removePath = cleanPath(path);
+            const removePath = normalizePath(path);
 
             const firstRemoveItem = await prisma.file.findFirst({
                 where: {

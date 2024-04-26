@@ -4,15 +4,15 @@ import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
-import { cleanPath, getLastSegment } from '@utils';
+import { normalizePath, getLastSegment } from '@utils';
 import { appendPath } from 'src/utils/appendPath';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
 
 export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDirectoryBody }> = async (req, res) => {
     const { oldPath: rawOldPath, destinationPath: rawDestinationPath } = req.body;
 
-    const destinationPath = cleanPath(rawDestinationPath);
-    const oldPath = cleanPath(rawOldPath);
+    const destinationPath = normalizePath(rawDestinationPath);
+    const oldPath = normalizePath(rawOldPath);
 
     try {
         const movedItems = await prisma.file.findMany({
@@ -38,7 +38,7 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
         if (destinationPath.includes(oldPath + '/')) return res.badRequest("Can not move folder to it's sub folder");
 
         if (
-            cleanPath(firstDestinationItem.path).length === cleanPath(destinationPath).length &&
+            normalizePath(firstDestinationItem.path).length === normalizePath(destinationPath).length &&
             firstDestinationItem.type === FileType.RAW_FILE
         ) {
             return res.badRequest('Can not move item to file');
