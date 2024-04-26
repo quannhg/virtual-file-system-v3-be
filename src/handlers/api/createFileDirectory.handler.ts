@@ -23,6 +23,8 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
             return res.badRequest(`File or directory already exists at path: ${existingPath}`);
         }
 
+        //TODO: remove empty directory 
+
         if (data)
             await prisma.file.create({
                 data: {

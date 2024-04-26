@@ -38,7 +38,8 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
 
         const folderExist = await prisma.file.findFirst({
             where: {
-                path: { startsWith: path.slice(0, -1) }
+                //TODO: test this carefully
+                OR: [{ path: path.slice(0, -1), type: FileType.DIRECTORY }, { path: { startsWith: path } }]
             }
         });
         if (!folderExist) {

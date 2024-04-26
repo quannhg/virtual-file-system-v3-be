@@ -1,13 +1,21 @@
 import {
     changeDirectory,
     createFileDirectory,
+    findDirectoryItems,
     listDirectoryItems,
     moveFileDirectory,
     removeFileDirectory,
     showFileContent,
     updateFileDirectory
 } from '@handlers';
-import { PathQueryStrings, CreateFileDirectoryBody, UpdateFileDirectoryBody, RemoveFileDirectory, MoveFileDirectoryBody } from '@dtos/in';
+import {
+    PathQueryStrings,
+    CreateFileDirectoryBody,
+    UpdateFileDirectoryBody,
+    RemoveFileDirectory,
+    MoveFileDirectoryBody,
+    FindFileDirectoryQueryStrings
+} from '@dtos/in';
 import { createRoute } from '@utils';
 import { Type } from '@sinclair/typebox';
 import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
@@ -65,6 +73,19 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: listDirectoryItems
+    },
+    {
+        method: 'GET',
+        url: '/find',
+        schema: {
+            summary: 'Find all items in directory',
+            querystring: FindFileDirectoryQueryStrings,
+            response: {
+                200: Type.Array(Type.String()),
+                400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
+            }
+        },
+        handler: findDirectoryItems
     },
     {
         method: 'PUT',

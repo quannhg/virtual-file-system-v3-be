@@ -3,6 +3,7 @@
  */
 
 export * from './createFileDirectory.dto';
+export * from './findFileDirectory.dto';
 export * from './moveFileDirectory.dto';
 export * from './pathQueryString.dto';
 export * from './removeFileDirectory.tos';

@@ -6,3 +6,8 @@ type ItemWithContent = {
         data: string;
     }[];
 };
+
+type SimpleItem = {
+    path: string;
+    type: 'RAW_FILE' | 'DIRECTORY';
+};
