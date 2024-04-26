@@ -21,7 +21,7 @@ services:
     image: ghcr.io/ticklabvn/tickapp-be:latest
     container_name: fastify_template
     ports:
-      - 8080:8080
+      - 8812:8080
     volumes:
       - .env:/app/.env
     depends_on:
