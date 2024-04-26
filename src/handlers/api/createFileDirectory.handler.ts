@@ -38,7 +38,7 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
                           type: FileType.RAW_FILE,
                           Content: {
                               create: {
-                                  data: data
+                                  data
                               }
                           }
                       }

@@ -6,7 +6,7 @@ CREATE TABLE `File` (
 
     FULLTEXT INDEX `File_path_idx`(`path`),
     PRIMARY KEY (`path`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- CreateTable
 CREATE TABLE `Content` (
@@ -15,7 +15,7 @@ CREATE TABLE `Content` (
 
     FULLTEXT INDEX `Content_path_idx`(`path`),
     PRIMARY KEY (`path`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 
 -- AddForeignKey
 ALTER TABLE `Content` ADD CONSTRAINT `Content_path_fkey` FOREIGN KEY (`path`) REFERENCES `File`(`path`) ON DELETE RESTRICT ON UPDATE CASCADE;

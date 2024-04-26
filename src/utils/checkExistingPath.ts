@@ -4,9 +4,9 @@ import { prisma } from '@repositories';
 export async function checkExistingPath(newPath: string): Promise<string | null> {
     const existingPathResult: { path: string }[] = await prisma.$queryRaw`
         SELECT path
-        FROM File 
-        WHERE (path = ${newPath}) OR 
-        (path LIKE CONCAT(${newPath},'/' , '%')) OR 
+        FROM File
+        WHERE (path = ${newPath}) OR
+        (path LIKE CONCAT(${newPath}, '/' , '%')) OR
         (type = ${FileType.RAW_FILE} AND ${newPath} LIKE CONCAT(path, '/', '%'))
     `;
 

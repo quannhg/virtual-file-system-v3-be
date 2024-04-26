@@ -1,7 +1,5 @@
 export const cleanPath = (path: string) => {
-    let cleanedPath = path.trim();
-
-    cleanedPath = cleanedPath.replace(/\/+$/, '/');
+    let cleanedPath = path.replace(/\/+$/, '/');
 
     if (!cleanedPath.startsWith('/')) {
         cleanedPath = '/' + cleanedPath;
