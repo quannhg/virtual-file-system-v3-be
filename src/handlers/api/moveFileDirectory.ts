@@ -35,7 +35,7 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
         });
         if (!firstDestinationItem) return res.badRequest('Not found destination path: ' + destinationPath);
 
-        if (destinationPath.includes(oldPath)) return res.badRequest("Can not move folder to it's sub folder");
+        if (destinationPath.includes(oldPath + '/')) return res.badRequest("Can not move folder to it's sub folder");
 
         if (
             cleanPath(firstDestinationItem.path).length === cleanPath(destinationPath).length &&
@@ -53,19 +53,29 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
 
         const removedLengthOfOldPart = oldPath.length - getLastSegment(oldPath).length - 1;
 
-        for (let i = 0; i < movedItems.length; i++) {
-            const item = movedItems[i];
-            const absoluteNewPath = appendPath(destinationPath, item.path.slice(removedLengthOfOldPart, item.path.length));
+        await prisma.$transaction(async (tx) => {
+            const moveItemsQueries = movedItems.map(async (item) => {
+                const absoluteNewPath = appendPath(destinationPath, item.path.slice(removedLengthOfOldPart, item.path.length));
 
-            await prisma.file.update({
-                where: {
-                    path: item.path
-                },
-                data: {
-                    path: absoluteNewPath
-                }
+                const removeEmptyFolder = tx.$executeRaw`
+                    DELETE FROM File
+                    WHERE ${absoluteNewPath} LIKE CONCAT(path, '/', '%')
+                    AND type = ${FileType.DIRECTORY}
+                `;
+                await removeEmptyFolder;
+
+                await tx.file.update({
+                    where: {
+                        path: item.path
+                    },
+                    data: {
+                        path: absoluteNewPath
+                    }
+                });
             });
-        }
+            return Promise.all(moveItemsQueries);
+        });
+
         return res.send({ message: `Successfully moved ${oldPath} to ${destinationPath}` });
     } catch (err) {
         logger.error(err);

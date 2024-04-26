@@ -23,27 +23,33 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
             return res.badRequest(`File or directory already exists at path: ${existingPath}`);
         }
 
-        //TODO: remove empty directory 
+        const removeEmptyFolder = prisma.$executeRaw`
+            DELETE FROM File
+            WHERE ${newPath} LIKE CONCAT(path, '/', '%')
+            AND type = ${FileType.DIRECTORY}
+        `;
 
-        if (data)
-            await prisma.file.create({
-                data: {
-                    path: newPath,
-                    type: FileType.RAW_FILE,
-                    Content: {
-                        create: {
-                            data: data
-                        }
-                    }
-                }
-            });
-        else
-            await prisma.file.create({
-                data: {
-                    path: newPath,
-                    type: FileType.DIRECTORY
-                }
-            });
+        await prisma.$transaction([
+            removeEmptyFolder,
+            data
+                ? prisma.file.create({
+                      data: {
+                          path: newPath,
+                          type: FileType.RAW_FILE,
+                          Content: {
+                              create: {
+                                  data: data
+                              }
+                          }
+                      }
+                  })
+                : prisma.file.create({
+                      data: {
+                          path: newPath,
+                          type: FileType.DIRECTORY
+                      }
+                  })
+        ]);
 
         return res.send({ message: `Successfully create ${data ? 'file' : 'directory'}` });
     } catch (err) {
