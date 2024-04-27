@@ -4,17 +4,20 @@ import { FindFileDirectoryQueryStrings } from '@dtos/in';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
-import { normalizePath } from '@utils';
+import { getParentPath, normalizePath } from '@utils';
 
-const extractMatchingPaths = (item: SimpleItem, keyString: string): string | null => {
+const extractMatchingPaths = (item: SimpleItem, keyString: string): string[] => {
     const pathParts = item.path.split('/');
-    const matchingIndex = pathParts.reverse().findIndex((part) => part.includes(keyString));
-    if (matchingIndex !== -1) {
-        const matchingPath = pathParts.slice(matchingIndex, pathParts.length).reverse().join('/');
-        if (item.type === 'RAW_FILE' && pathParts.length === 1) return matchingPath;
-        else return matchingPath + '/';
+    let currentPath = '';
+    const matchingPaths = [];
+    for (const part of pathParts) {
+        currentPath += '/' + part;
+        if (part.includes(keyString))
+            if (item.type === 'RAW_FILE' && currentPath.length === item.path.length) matchingPaths.push(currentPath + '/');
+            else matchingPaths.push(currentPath);
     }
-    return null;
+
+    return matchingPaths;
 };
 
 export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirectoryQueryStrings }> = async (req, res) => {
@@ -44,7 +47,10 @@ export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirect
 
         const matchingItems = await prisma.file.findMany({
             where: {
-                path: { search: `${path}*${keyString}*` }
+                path: {
+                    startsWith: path,
+                    contains: keyString
+                }
             },
             select: {
                 path: true,
@@ -55,8 +61,11 @@ export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirect
         const matchingPaths = new Set<string>();
 
         matchingItems.forEach((item) => {
-            const matchingPath = extractMatchingPaths({ ...item, path: item.path.slice(path.length, -1) }, keyString);
-            if (matchingPath) matchingPaths.add(matchingPath);
+            const currentMatchingPaths = extractMatchingPaths(
+                { ...item, path: item.path.slice(getParentPath(path).length + 1, -1) },
+                keyString
+            );
+            currentMatchingPaths.forEach((matchingPath) => matchingPaths.add(matchingPath));
         });
 
         return res.send(Array.from(matchingPaths).sort());

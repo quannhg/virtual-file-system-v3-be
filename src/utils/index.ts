@@ -6,6 +6,7 @@ export * from './appendPath';
 export * from './checkExistingPath';
 export * from './createRoute';
 export * from './getLastSegment';
+export * from './getParrentPath';
 export * from './normalizePath';
 export * from './removeItem';
 export * from './validatePath';
