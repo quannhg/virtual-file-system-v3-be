@@ -76,8 +76,9 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
             await Promise.all(moveItemsQueries);
 
             const parentItem = await tx.file.findFirst({
-                where: { path: { startsWith: parentPath } }
+                where: { OR: [{ path: { startsWith: parentPath } }, { path: parentPath.slice(0, -1) }] }
             });
+
             if (!parentItem) {
                 const createEmptyParent = tx.file.create({
                     data: { path: parentPath.slice(0, -1), type: FileType.DIRECTORY, createdAt: latestItemOfParent[0].createdAt }
