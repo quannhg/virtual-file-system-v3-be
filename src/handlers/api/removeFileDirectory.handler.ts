@@ -3,7 +3,7 @@ import { RemoveFileDirectory } from '@dtos/in';
 import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
-import { normalizePath, getLastSegment } from '@utils';
+import { removeItem, getLastSegment, normalizePath } from '@utils';
 
 export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: RemoveFileDirectory }> = async (req, res) => {
     try {
@@ -13,6 +13,7 @@ export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: Re
         for (const path of paths) {
             const removePath = normalizePath(path);
 
+            
             const firstRemoveItem = await prisma.file.findFirst({
                 where: {
                     OR: [{ path: { startsWith: removePath + '/' } }, { path: removePath }]
@@ -22,19 +23,8 @@ export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: Re
                 errorMessages.push(`Cannot remove ${getLastSegment(path)}: File/directory not found`);
                 continue;
             }
-
-            await prisma.$transaction([
-                prisma.content.deleteMany({
-                    where: {
-                        OR: [{ path: { startsWith: removePath + '/' } }, { path: removePath }]
-                    }
-                }),
-                prisma.file.deleteMany({
-                    where: {
-                        OR: [{ path: { startsWith: removePath + '/' } }, { path: removePath }]
-                    }
-                })
-            ]);
+            
+            await removeItem(removePath);
         }
 
         if (errorMessages.length === 0) {

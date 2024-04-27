@@ -53,16 +53,16 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
 
         const removedLengthOfOldPart = oldPath.length - getLastSegment(oldPath).length - 1;
 
+        const parentPath = oldPath.split('/').slice(0, -1).join('/') + '/';
+        const latestItemOfParent = await prisma.file.findMany({
+            where: { path: { startsWith: parentPath } },
+            orderBy: { createdAt: 'asc' },
+            take: 1
+        });
+
         await prisma.$transaction(async (tx) => {
             const moveItemsQueries = movedItems.map(async (item) => {
                 const absoluteNewPath = appendPath(destinationPath, item.path.slice(removedLengthOfOldPart, item.path.length));
-
-                const removeEmptyFolder = tx.$executeRaw`
-                    DELETE FROM File
-                    WHERE ${absoluteNewPath} LIKE CONCAT(path, '/', '%')
-                    AND type = ${FileType.DIRECTORY}
-                `;
-                await removeEmptyFolder;
 
                 await tx.file.update({
                     where: {
@@ -73,7 +73,17 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
                     }
                 });
             });
-            return Promise.all(moveItemsQueries);
+            await Promise.all(moveItemsQueries);
+
+            const parentItem = await tx.file.findFirst({
+                where: { path: { startsWith: parentPath } }
+            });
+            if (!parentItem) {
+                const createEmptyParent = tx.file.create({
+                    data: { path: parentPath.slice(0, -1), type: FileType.DIRECTORY, createdAt: latestItemOfParent[0].createdAt }
+                });
+                await createEmptyParent;
+            }
         });
 
         return res.send({ message: `Successfully moved ${oldPath} to ${destinationPath}` });

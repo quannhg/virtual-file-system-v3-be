@@ -4,6 +4,7 @@ import { FindFileDirectoryQueryStrings } from '@dtos/in';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
+import { normalizePath } from '@utils';
 
 const extractMatchingPaths = (item: SimpleItem, keyString: string): string | null => {
     const pathParts = item.path.split('/');
@@ -19,7 +20,7 @@ const extractMatchingPaths = (item: SimpleItem, keyString: string): string | nul
 export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirectoryQueryStrings }> = async (req, res) => {
     const { keyString, path: rawPath } = req.query;
 
-    const path = rawPath.endsWith('/') ? rawPath : rawPath + '/';
+    const path = normalizePath(rawPath) + '/';
 
     try {
         const exactFile = await prisma.file.findFirst({

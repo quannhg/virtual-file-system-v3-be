@@ -20,5 +20,5 @@ export const appendPath = (currentPath: string, appendedPath: string): string =>
         }
     }
 
-    return resultPath;
+    return resultPath[0] === '/' ? resultPath : '/' + resultPath;
 };

@@ -4,9 +4,10 @@ import { PathQueryStrings } from '@dtos/in';
 import { ShowFileContentResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
+import { normalizePath } from '@utils';
 
 export const showFileContent: Handler<ShowFileContentResult, { Querystring: PathQueryStrings }> = async (req, res) => {
-    const path = req.query.path;
+    const path = normalizePath(req.query.path);
 
     if (!path) {
         return res.unprocessableEntity(PATH_IS_REQUIRED);

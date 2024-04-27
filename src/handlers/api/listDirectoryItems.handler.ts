@@ -5,7 +5,7 @@ import { ListDirectoryItem } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
-import { getLastSegment } from '@utils';
+import { getLastSegment, normalizePath } from '@utils';
 import moment from 'moment';
 
 const extractDirectItemPaths = (items: ItemWithContent[], path: string): Set<string> => {
@@ -23,7 +23,7 @@ const extractDirectItemPaths = (items: ItemWithContent[], path: string): Set<str
 export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
 
-    const path = rawPath.endsWith('/') ? rawPath : rawPath + '/';
+    const path = normalizePath(rawPath) + '/';
 
     try {
         const exactFile = await prisma.file.findFirst({
