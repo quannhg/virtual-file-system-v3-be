@@ -21,7 +21,7 @@ model File {
   createdAt DateTime  @default(now())
   Content   Content[]
 
-  @@fulltext([path])
+  @@index([path])
 }
 
 model Content {
@@ -29,7 +29,7 @@ model Content {
   data String
   file File   @relation(fields: [path], references: [path])
 
-  @@fulltext([path])
+  @@index([path])
 }
 
 enum FileType {
