@@ -15,6 +15,7 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
 
     const newPath = normalizePath(rawNewPath);
     const oldPath = normalizePath(rawOldPath);
+    
 
     if (path.dirname(oldPath) !== path.dirname(newPath)) {
         return res.badRequest('Update only supported change name of item at last segment! Using mv to change parent directory instead.');
@@ -73,7 +74,7 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
         } else {
             const updateItems = await prisma.file.findMany({
                 where: {
-                    path: { startsWith: oldPath }
+                    OR: [{ path: { startsWith: oldPath + '/' } }, { path: oldPath }]
                 },
                 select: {
                     path: true,
