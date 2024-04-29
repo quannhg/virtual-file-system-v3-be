@@ -3,6 +3,7 @@ import { Static, Type } from '@sinclair/typebox';
 
 export const CreateFileDirectoryBody = Type.Object({
     path: Type.String(),
+    shouldCreateParent: Type.Boolean(),
     data: Nullable(Type.String())
 });
 

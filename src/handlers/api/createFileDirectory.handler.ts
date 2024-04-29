@@ -5,11 +5,11 @@ import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
-import { normalizePath, validatePath } from '@utils';
+import { getParentPath, normalizePath, validatePath } from '@utils';
 import { PATH_IS_REQUIRED } from '@constants';
 
 export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: CreateFileDirectoryBody }> = async (req, res) => {
-    const { path: receivedPath, data } = req.body;
+    const { path: receivedPath, shouldCreateParent, data } = req.body;
 
     if (!receivedPath) {
         return res.unprocessableEntity(PATH_IS_REQUIRED);
@@ -23,6 +23,15 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
     }
 
     try {
+        if (!shouldCreateParent) {
+            const parentPath = getParentPath(newPath);
+            const parentItem = await prisma.file.findFirst({
+                where: { OR: [{ path: parentPath, type: FileType.DIRECTORY }, { path: { startsWith: parentPath + '/' } }] }
+            });
+
+            if (!parentItem) return res.badRequest(`The specified parent item with path "${parentPath}" does not exist.`);
+        }
+
         const existingPath = await checkExistingPath(newPath);
         if (existingPath) {
             return res.badRequest(`File or directory already exists at path: ${existingPath}`);
