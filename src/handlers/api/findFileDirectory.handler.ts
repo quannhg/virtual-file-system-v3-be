@@ -12,9 +12,10 @@ const extractMatchingPaths = (item: SimpleItem, keyString: string): string[] => 
     const matchingPaths = [];
     for (const part of pathParts) {
         currentPath += '/' + part;
-        if (part.includes(keyString))
-            if (item.type === 'RAW_FILE' && currentPath.length === item.path.length) matchingPaths.push(currentPath + '/');
-            else matchingPaths.push(currentPath);
+        if (part.includes(keyString)) {
+            if (item.type === 'RAW_FILE' && currentPath.length === item.path.length + 1) matchingPaths.push(currentPath);
+            else matchingPaths.push(currentPath + '/');
+        }
     }
 
     return matchingPaths;
@@ -62,7 +63,7 @@ export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirect
 
         matchingItems.forEach((item) => {
             const currentMatchingPaths = extractMatchingPaths(
-                { ...item, path: item.path.slice(getParentPath(path).length + 1, -1) },
+                { ...item, path: item.path.slice(getParentPath(path).length + 1) },
                 keyString
             );
             currentMatchingPaths.forEach((matchingPath) => matchingPaths.add(matchingPath));
