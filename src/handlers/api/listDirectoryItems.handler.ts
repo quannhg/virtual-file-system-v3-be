@@ -1,5 +1,5 @@
 import { logger } from '@configs';
-import { DIRECTORY_NOT_FOUND } from '@constants';
+import { DIRECTORY_NOT_FOUND, PATH_IS_REQUIRED } from '@constants';
 import { PathQueryStrings } from '@dtos/in';
 import { ListDirectoryItem } from '@dtos/out';
 import { Handler } from '@interfaces';
@@ -22,6 +22,10 @@ const extractDirectItemPaths = (items: ItemWithContent[], path: string): Set<str
 
 export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
+
+    if (!rawPath) {
+        return res.unprocessableEntity(PATH_IS_REQUIRED);
+    }
 
     const normalizeResult = await normalizePath(rawPath);
     if (normalizeResult.invalid) {

@@ -9,15 +9,15 @@ import { normalizePath } from '@utils';
 export const showFileContent: Handler<ShowFileContentResult, { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
 
+    if (!rawPath) {
+        return res.unprocessableEntity(PATH_IS_REQUIRED);
+    }
+
     const normalizeResult = await normalizePath(rawPath, true);
     if (normalizeResult.invalid) {
         return res.badRequest(normalizeResult.message);
     }
     const path = normalizeResult.path;
-
-    if (!path) {
-        return res.unprocessableEntity(PATH_IS_REQUIRED);
-    }
 
     try {
         const file = await prisma.content.findFirst({

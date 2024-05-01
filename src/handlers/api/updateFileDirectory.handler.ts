@@ -13,6 +13,10 @@ import { checkExistingPath } from 'src/utils/checkExistingPath';
 export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFileDirectoryBody }> = async (req, res) => {
     const { oldPath: rawOldPath, newPath: rawNewPath, newData } = req.body;
 
+    if (!rawOldPath || !rawNewPath) {
+        return res.unprocessableEntity("Please provide both 'old' and 'new' path.");
+    }
+
     const oldPathNormalizeResult = await normalizePath(rawOldPath);
     const newPathNormalizeResult = await normalizePath(rawNewPath);
     if (oldPathNormalizeResult.invalid) {

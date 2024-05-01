@@ -8,6 +8,10 @@ import { removeItem, getLastSegment, normalizePath } from '@utils';
 export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: RemoveFileDirectory }> = async (req, res) => {
     try {
         const paths = req.query.paths;
+        if (paths.length === 0) {
+            return res.unprocessableEntity('Missing required path.');
+        }
+
         const errorMessages = [];
 
         for (const rawPath of paths) {

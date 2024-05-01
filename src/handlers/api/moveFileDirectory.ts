@@ -11,6 +11,10 @@ import { checkExistingPath } from 'src/utils/checkExistingPath';
 export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDirectoryBody }> = async (req, res) => {
     const { oldPath: rawOldPath, destinationPath: rawDestinationPath } = req.body;
 
+    if (!rawOldPath || !rawDestinationPath) {
+        return res.unprocessableEntity("Please provide both 'old' and 'destination' path.");
+    }
+
     const oldPathNormalizeResult = await normalizePath(rawOldPath);
     const destinationPathNormalizeResult = await normalizePath(rawDestinationPath);
     if (oldPathNormalizeResult.invalid) {

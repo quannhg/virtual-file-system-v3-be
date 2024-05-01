@@ -1,5 +1,5 @@
 import { logger } from '@configs';
-import { DIRECTORY_NOT_FOUND } from '@constants';
+import { DIRECTORY_NOT_FOUND, PATH_IS_REQUIRED } from '@constants';
 import { FindFileDirectoryQueryStrings } from '@dtos/in';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
@@ -23,6 +23,10 @@ const extractMatchingPaths = (item: SimpleItem, keyString: string): string[] => 
 
 export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirectoryQueryStrings }> = async (req, res) => {
     const { keyString, path: rawPath } = req.query;
+
+    if (!rawPath) {
+        return res.unprocessableEntity(PATH_IS_REQUIRED);
+    }
 
     const normalizeResult = await normalizePath(rawPath);
     if (normalizeResult.invalid) {
