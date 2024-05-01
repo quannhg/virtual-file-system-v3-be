@@ -5,22 +5,21 @@ import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
-import { getParentPath, normalizePath, validatePath } from '@utils';
+import { getParentPath, normalizePath } from '@utils';
 import { PATH_IS_REQUIRED } from '@constants';
 
 export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: CreateFileDirectoryBody }> = async (req, res) => {
-    const { path: receivedPath, shouldCreateParent, data } = req.body;
+    const { path: rawPath, shouldCreateParent, data } = req.body;
 
-    if (!receivedPath) {
+    if (!rawPath) {
         return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
 
-    const newPath = normalizePath(receivedPath);
-
-    const validatePathResult = validatePath(newPath);
-    if (!validatePathResult.valid) {
-        return res.badRequest(validatePathResult.message);
+    const normalizeResult = normalizePath(rawPath, data !== null ? data.length !== 0 : false);
+    if (normalizeResult.invalid) {
+        return res.badRequest(normalizeResult.message);
     }
+    const newPath = normalizeResult.path;
 
     try {
         if (!shouldCreateParent) {

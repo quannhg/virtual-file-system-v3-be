@@ -7,7 +7,13 @@ import { prisma } from '@repositories';
 import { normalizePath } from '@utils';
 
 export const showFileContent: Handler<ShowFileContentResult, { Querystring: PathQueryStrings }> = async (req, res) => {
-    const path = normalizePath(req.query.path);
+    const rawPath = req.query.path;
+
+    const normalizeResult = normalizePath(rawPath, true);
+    if (normalizeResult.invalid) {
+        return res.badRequest(normalizeResult.message);
+    }
+    const path = normalizeResult.path;
 
     if (!path) {
         return res.unprocessableEntity(PATH_IS_REQUIRED);

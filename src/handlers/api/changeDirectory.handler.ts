@@ -14,7 +14,11 @@ export const changeDirectory: Handler<SingleMessageResult, { Querystring: PathQu
         return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
 
-    const path = normalizePath(rawPath);
+    const normalizeResult = normalizePath(rawPath);
+    if (normalizeResult.invalid) {
+        return res.badRequest(normalizeResult.message);
+    }
+    const path = normalizeResult.path;
 
     try {
         const file = await prisma.file.findFirst({

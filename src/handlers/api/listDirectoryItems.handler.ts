@@ -23,7 +23,11 @@ const extractDirectItemPaths = (items: ItemWithContent[], path: string): Set<str
 export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
 
-    const path = normalizePath(rawPath) + '/';
+    const normalizeResult = normalizePath(rawPath);
+    if (normalizeResult.invalid) {
+        return res.badRequest(normalizeResult.message);
+    }
+    const path = normalizeResult.path + '/';
 
     try {
         const exactFile = await prisma.file.findFirst({

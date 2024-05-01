@@ -24,7 +24,11 @@ const extractMatchingPaths = (item: SimpleItem, keyString: string): string[] => 
 export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirectoryQueryStrings }> = async (req, res) => {
     const { keyString, path: rawPath } = req.query;
 
-    const path = normalizePath(rawPath) + '/';
+    const normalizeResult = normalizePath(rawPath);
+    if (normalizeResult.invalid) {
+        return res.badRequest(normalizeResult.message);
+    }
+    const path = normalizeResult.path + '/';
 
     try {
         const exactFile = await prisma.file.findFirst({

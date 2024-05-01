@@ -10,20 +10,24 @@ export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: Re
         const paths = req.query.paths;
         const errorMessages = [];
 
-        for (const path of paths) {
-            const removePath = normalizePath(path);
+        for (const rawPath of paths) {
+            const normalizeResult = normalizePath(rawPath);
+            if (normalizeResult.invalid) {
+                errorMessages.push(normalizeResult.message);
+                continue;
+            }
+            const removePath = normalizeResult.path;
 
-            
             const firstRemoveItem = await prisma.file.findFirst({
                 where: {
                     OR: [{ path: { startsWith: removePath + '/' } }, { path: removePath }]
                 }
             });
             if (!firstRemoveItem) {
-                errorMessages.push(`Cannot remove ${getLastSegment(path)}: File/directory not found`);
+                errorMessages.push(`Cannot remove ${getLastSegment(rawPath)}: File/directory not found`);
                 continue;
             }
-            
+
             await removeItem(removePath);
         }
 

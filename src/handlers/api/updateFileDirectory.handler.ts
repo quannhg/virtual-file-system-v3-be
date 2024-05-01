@@ -13,9 +13,17 @@ import { checkExistingPath } from 'src/utils/checkExistingPath';
 export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFileDirectoryBody }> = async (req, res) => {
     const { oldPath: rawOldPath, newPath: rawNewPath, newData } = req.body;
 
-    const newPath = normalizePath(rawNewPath);
-    const oldPath = normalizePath(rawOldPath);
-    
+    const oldPathNormalizeResult = normalizePath(rawOldPath);
+    const newPathNormalizeResult = normalizePath(rawNewPath);
+    if (oldPathNormalizeResult.invalid) {
+        return res.badRequest(oldPathNormalizeResult.message);
+    }
+    if (newPathNormalizeResult.invalid) {
+        return res.badRequest(newPathNormalizeResult.message);
+    }
+
+    const oldPath = oldPathNormalizeResult.path;
+    const newPath = newPathNormalizeResult.path;
 
     if (path.dirname(oldPath) !== path.dirname(newPath)) {
         return res.badRequest('Update only supported change name of item at last segment! Using mv to change parent directory instead.');

@@ -11,8 +11,17 @@ import { checkExistingPath } from 'src/utils/checkExistingPath';
 export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDirectoryBody }> = async (req, res) => {
     const { oldPath: rawOldPath, destinationPath: rawDestinationPath } = req.body;
 
-    const destinationPath = normalizePath(rawDestinationPath);
-    const oldPath = normalizePath(rawOldPath);
+    const oldPathNormalizeResult = normalizePath(rawOldPath);
+    const destinationPathNormalizeResult = normalizePath(rawDestinationPath);
+    if (oldPathNormalizeResult.invalid) {
+        return res.badRequest(oldPathNormalizeResult.message);
+    }
+    if (destinationPathNormalizeResult.invalid) {
+        return res.badRequest(destinationPathNormalizeResult.message);
+    }
+
+    const oldPath = oldPathNormalizeResult.path;
+    const destinationPath = destinationPathNormalizeResult.path;
 
     try {
         const movedItems = await prisma.file.findMany({
@@ -37,10 +46,7 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
 
         if (destinationPath.includes(oldPath + '/')) return res.badRequest("Can not move folder to it's sub folder");
 
-        if (
-            normalizePath(firstDestinationItem.path).length === normalizePath(destinationPath).length &&
-            firstDestinationItem.type === FileType.RAW_FILE
-        ) {
+        if (firstDestinationItem.path.length === destinationPath.length && firstDestinationItem.type === FileType.RAW_FILE) {
             return res.badRequest('Can not move item to file');
         }
 
