@@ -15,7 +15,7 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
         return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
 
-    const normalizeResult = normalizePath(rawPath, data !== null ? data.length !== 0 : false);
+    const normalizeResult = await normalizePath(rawPath, data !== null ? data.length !== 0 : false);
     if (normalizeResult.invalid) {
         return res.badRequest(normalizeResult.message);
     }

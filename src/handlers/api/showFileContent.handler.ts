@@ -9,7 +9,7 @@ import { normalizePath } from '@utils';
 export const showFileContent: Handler<ShowFileContentResult, { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
 
-    const normalizeResult = normalizePath(rawPath, true);
+    const normalizeResult = await normalizePath(rawPath, true);
     if (normalizeResult.invalid) {
         return res.badRequest(normalizeResult.message);
     }

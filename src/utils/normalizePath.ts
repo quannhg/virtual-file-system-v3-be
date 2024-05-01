@@ -1,13 +1,24 @@
 import { InvalidPathResult, ValidPathResult } from '@interfaces';
+import { FileType } from '@prisma/client';
+import { prisma } from '@repositories';
 
-export function normalizePath(path: string, isFilePath?: boolean): ValidPathResult | InvalidPathResult {
+export async function normalizePath(path: string, isFilePath?: boolean): Promise<ValidPathResult | InvalidPathResult> {
     if (path.endsWith('/')) {
         if (isFilePath)
             return {
                 invalid: true,
                 message: 'File paths cannot end with a trailing slash. Please remove the "/" from the end of the path.'
             };
-        else path = path.slice(0, -1);
+
+        path = path.slice(0, -1);
+
+        const fileWithPath = await prisma.file.findFirst({ where: { path, type: FileType.RAW_FILE } });
+        if (fileWithPath) {
+            return {
+                invalid: true,
+                message: 'Path exists as a file, not a directory.'
+            };
+        }
     }
 
     let isAbs = false;

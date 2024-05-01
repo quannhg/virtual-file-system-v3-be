@@ -14,7 +14,7 @@ export const changeDirectory: Handler<SingleMessageResult, { Querystring: PathQu
         return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
 
-    const normalizeResult = normalizePath(rawPath);
+    const normalizeResult = await normalizePath(rawPath);
     if (normalizeResult.invalid) {
         return res.badRequest(normalizeResult.message);
     }

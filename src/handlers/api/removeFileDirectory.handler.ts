@@ -11,7 +11,7 @@ export const removeFileDirectory: Handler<SingleMessageResult, { Querystring: Re
         const errorMessages = [];
 
         for (const rawPath of paths) {
-            const normalizeResult = normalizePath(rawPath);
+            const normalizeResult = await normalizePath(rawPath);
             if (normalizeResult.invalid) {
                 errorMessages.push(normalizeResult.message);
                 continue;

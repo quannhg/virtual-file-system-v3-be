@@ -23,7 +23,7 @@ const extractDirectItemPaths = (items: ItemWithContent[], path: string): Set<str
 export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
 
-    const normalizeResult = normalizePath(rawPath);
+    const normalizeResult = await normalizePath(rawPath);
     if (normalizeResult.invalid) {
         return res.badRequest(normalizeResult.message);
     }

@@ -24,7 +24,7 @@ const extractMatchingPaths = (item: SimpleItem, keyString: string): string[] => 
 export const findDirectoryItems: Handler<string[], { Querystring: FindFileDirectoryQueryStrings }> = async (req, res) => {
     const { keyString, path: rawPath } = req.query;
 
-    const normalizeResult = normalizePath(rawPath);
+    const normalizeResult = await normalizePath(rawPath);
     if (normalizeResult.invalid) {
         return res.badRequest(normalizeResult.message);
     }
