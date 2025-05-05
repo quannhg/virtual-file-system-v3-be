@@ -70,42 +70,82 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
         const result: ListDirectoryItem[] = [];
 
         for (const itemPath of directItems) {
+            const itemName = getLastSegment(itemPath);
+        
+            // 1. SYMLINK
+            const symlinkFile = await prisma.file.findFirst({
+                where: { path: itemPath, type: FileType.SYMLINK },
+                select: {
+                    createdAt: true,
+                    targetPath: true
+                }
+            });
+        
+            if (symlinkFile) {
+                const targetFile = await prisma.file.findFirst({
+                    where: { path: symlinkFile.targetPath ?? undefined },
+                    include: { Content: true }
+                });
+        
+                const size =
+                    targetFile?.type === FileType.RAW_FILE
+                        ? targetFile.Content[0]?.data.length || 0
+                        : (
+                              await prisma.$queryRaw<
+                                  { size: string }[]
+                              >`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE CONCAT(${symlinkFile.targetPath}, '/', '%')`
+                          )[0]?.size || 0;
+        
+                result.push({
+                    name: itemName + ' → ' + symlinkFile.targetPath,
+                    type: FileType.SYMLINK,
+                    createAt: moment(symlinkFile.createdAt).toString(),
+                    size: Number(size)
+                });
+        
+                continue;
+            }
+        
+            // 2. RAW_FILE
             const directFile = await prisma.file.findFirst({
                 where: { path: itemPath, type: FileType.RAW_FILE },
                 select: {
-                    path: true,
                     createdAt: true,
                     Content: { select: { data: true } }
                 }
             });
-
-            const itemName = getLastSegment(itemPath);
-
+        
             if (directFile) {
                 result.push({
                     name: itemName,
+                    type: FileType.RAW_FILE,
                     createAt: moment(directFile.createdAt).toString(),
-                    size: directFile.Content.length > 0 ? directFile.Content[0].data.length : 0
+                    size: directFile.Content[0]?.data.length || 0
                 });
-            } else {
-                const folderSizeResult: { size: string }[] =
-                    await prisma.$queryRaw`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE CONCAT(${itemPath}, '/', '%')`;
-
-                const firstFolderItem = await prisma.file.findFirst({
-                    where: {
-                        path: { startsWith: itemPath },
-                        type: FileType.DIRECTORY
-                    },
-                    orderBy: { createdAt: 'asc' }
-                });
-
-                result.push({
-                    name: itemName + '/',
-                    createAt: (firstFolderItem && moment(firstFolderItem.createdAt).toString()) || '0',
-                    size: Number(folderSizeResult[0]?.size) || 0
-                });
+        
+                continue;
             }
+        
+            // 3. DIRECTORY
+            const folderSizeResult: { size: string }[] =
+                await prisma.$queryRaw`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE CONCAT(${itemPath}, '/', '%')`;
+        
+            const firstFolderItem = await prisma.file.findFirst({
+                where: {
+                    path: { startsWith: itemPath },
+                    type: FileType.DIRECTORY
+                },
+                orderBy: { createdAt: 'asc' }
+            });
+        
+            result.push({
+                name: itemName + '/',
+                type: FileType.DIRECTORY,
+                createAt: (firstFolderItem && moment(firstFolderItem.createdAt).toString()) || '0',
+                size: Number(folderSizeResult[0]?.size) || 0
+            });
         }
+        
 
         return res.send(result);
     } catch (err) {
