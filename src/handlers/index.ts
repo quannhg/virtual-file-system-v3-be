@@ -3,6 +3,7 @@
  */
 
 export * from './error.handler';
+export * from './api/cacheStats.handler';
 export * from './api/changeDirectory.handler';
 export * from './api/createFileDirectory.handler';
 export * from './api/findFileDirectory.handler';

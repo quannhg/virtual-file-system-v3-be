@@ -5,7 +5,7 @@ import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
-import { normalizePath } from '@utils';
+import { normalizePath, invalidateFileCache, invalidateDirectoryCache } from '@utils';
 import path from 'path';
 import { appendPath } from 'src/utils/appendPath';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
@@ -82,6 +82,12 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
                 });
             });
 
+            // Invalidate cache for both old and new paths
+            await invalidateFileCache(oldPath);
+            await invalidateFileCache(newPath);
+            await invalidateDirectoryCache(path.dirname(oldPath));
+            await invalidateDirectoryCache(path.dirname(newPath));
+
             return res.send({ message: 'Successfully updated file' });
         } else {
             const updateItems = await prisma.file.findMany({
@@ -103,8 +109,7 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
                 return res.badRequest(`File or directory already exists at path: ${existingPath}`);
             }
 
-            for (let i = 0; i < updateItems.length; i++) {
-                const item = updateItems[i];
+            for (const item of updateItems) {
                 const absoluteNewPath = appendPath(newPath, item.path.slice(oldPath.length, item.path.length));
 
                 await prisma.file.update({
@@ -115,6 +120,12 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
                         path: absoluteNewPath
                     }
                 });
+
+                // Invalidate cache for each updated path
+                await invalidateFileCache(item.path);
+                await invalidateFileCache(absoluteNewPath);
+                await invalidateDirectoryCache(path.dirname(item.path));
+                await invalidateDirectoryCache(path.dirname(absoluteNewPath));
             }
             return res.send({ message: 'Successfully updated file/directory' });
         }

@@ -2,9 +2,11 @@ import {
     changeDirectory,
     createFileDirectory,
     findDirectoryItems,
+    getCacheStats,
     listDirectoryItems,
     moveFileDirectory,
     removeFileDirectory,
+    resetCacheStats,
     showFileContent,
     updateFileDirectory
 } from '@handlers';
@@ -19,7 +21,14 @@ import {
 import { createRoute } from '@utils';
 import { Type } from '@sinclair/typebox';
 import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
-import { SingleMessageResult, CreateFileDirectoryResult, ShowFileContentResult, ListDirectoryItem } from '@dtos/out';
+import {
+    CacheStatsResult,
+    CreateFileDirectoryResult,
+    ListDirectoryItem,
+    ResetCacheStatsResult,
+    ShowFileContentResult,
+    SingleMessageResult
+} from '@dtos/out';
 
 export const apiRoute = createRoute('Api', [
     {
@@ -125,5 +134,29 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: removeFileDirectory
+    },
+    {
+        method: 'GET',
+        url: '/cache/stats',
+        schema: {
+            summary: 'Get cache statistics',
+            response: {
+                200: CacheStatsResult,
+                500: Type.Object({ message: Type.String() })
+            }
+        },
+        handler: getCacheStats
+    },
+    {
+        method: 'POST',
+        url: '/cache/reset',
+        schema: {
+            summary: 'Reset cache statistics',
+            response: {
+                200: ResetCacheStatsResult,
+                500: Type.Object({ message: Type.String() })
+            }
+        },
+        handler: resetCacheStats
     }
 ]);

@@ -3,6 +3,7 @@
  */
 
 export * from './appendPath';
+export * from './cache';
 export * from './checkExistingPath';
 export * from './createRoute';
 export * from './getLastSegment';
