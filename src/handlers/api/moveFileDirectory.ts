@@ -99,7 +99,7 @@ export const moveFileDirectory: Handler<SingleMessageResult, { Body: MoveFileDir
 
         // Invalidate cache for both source and destination directories
         const oldParentPath = oldPath.split('/').slice(0, -1).join('/');
-        const destinationParentPath = destinationPath.split('/').slice(0, -1).join('/');
+        const destinationParentPath = destinationPath;
 
         await invalidateDirectoryCache(oldParentPath);
         await invalidateDirectoryCache(destinationParentPath);
