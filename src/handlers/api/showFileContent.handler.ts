@@ -1,10 +1,11 @@
 import { logger } from '@configs';
+import { redisConfig } from '@configs/redis';
 import { FILE_NOT_FOUND, PATH_IS_REQUIRED } from '@constants';
 import { PathQueryStrings } from '@dtos/in';
 import { ShowFileContentResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { prisma } from '@repositories';
-import { normalizePath } from '@utils';
+import { normalizePath, getCache, setCache, cacheKeys } from '@utils';
 
 export const showFileContent: Handler<ShowFileContentResult, { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
@@ -19,6 +20,13 @@ export const showFileContent: Handler<ShowFileContentResult, { Querystring: Path
     const path = normalizeResult.path;
 
     try {
+        const cacheKey = cacheKeys.fileContent(path);
+        const cachedContent = await getCache<ShowFileContentResult>(cacheKey);
+
+        if (cachedContent) {
+            return res.status(200).send(cachedContent);
+        }
+
         // Step 1: Get file metadata from File model (not Content)
         const fileMeta = await prisma.file.findUnique({
             where: { path },
@@ -40,6 +48,7 @@ export const showFileContent: Handler<ShowFileContentResult, { Querystring: Path
         // Step 2: Query data from Content using actualPath
         const fileContent = await prisma.content.findUnique({
             where: { path: actualPath },
+
             select: {
                 data: true
             }
@@ -50,12 +59,15 @@ export const showFileContent: Handler<ShowFileContentResult, { Querystring: Path
         }
 
         // Return structured response with file information
-        return res.status(200).send({
+        const file = res.status(200).send({
             data: fileContent.data,
             type: fileMeta.type,
             isSymlink: fileMeta.type === 'SYMLINK',
             targetPath: fileMeta.targetPath ?? null
         });
+
+        await setCache(cacheKey, file, redisConfig.ttl.fileContent);
+        return res.status(200).send(file);
     } catch (err) {
         logger.error(err);
         return res.internalServerError();

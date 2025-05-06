@@ -5,7 +5,7 @@ import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
-import { getParentPath, normalizePath } from '@utils';
+import { getParentPath, normalizePath, invalidateDirectoryCache, invalidateFileCache } from '@utils';
 import { PATH_IS_REQUIRED } from '@constants';
 
 export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: CreateFileDirectoryBody }> = async (req, res) => {
@@ -47,6 +47,7 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
             fileType = data ? FileType.RAW_FILE : FileType.DIRECTORY;
         }
 
+<<<<<<< HEAD
         // Tạo file/directory/symlink tùy theo loại
         if (fileType === FileType.SYMLINK) {
             // Kiểm tra xem targetPath có tồn tại không
@@ -87,6 +88,18 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
         }
 
         return res.send({ message: `Successfully created ${fileType.toLowerCase()}` });
+=======
+        // Invalidate cache for the parent directory to ensure ls shows the new file/directory
+        const parentPath = getParentPath(newPath);
+        await invalidateDirectoryCache(parentPath);
+
+        // If this is a file, also invalidate its content cache (though it's likely not cached yet)
+        if (data) {
+            await invalidateFileCache(newPath);
+        }
+
+        return res.send({ message: `Successfully create ${data ? 'file' : 'directory'}` });
+>>>>>>> 6153d06aa8db205766bb738cf571562d11fbf3dd
     } catch (err) {
         logger.error(err);
         return res.internalServerError();
