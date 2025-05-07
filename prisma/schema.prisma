@@ -19,6 +19,7 @@ model File {
   path      String    @id
   type      FileType
   createdAt DateTime  @default(now())
+  targetPath String?
   Content   Content[]
 
   @@index([path])
@@ -35,6 +36,7 @@ model Content {
 enum FileType {
   RAW_FILE
   DIRECTORY
+  SYMLINK
 }
 
 enum Gender {

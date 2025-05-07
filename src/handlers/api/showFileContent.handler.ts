@@ -9,7 +9,6 @@ import { normalizePath, getCache, setCache, cacheKeys } from '@utils';
 
 export const showFileContent: Handler<ShowFileContentResult, { Querystring: PathQueryStrings }> = async (req, res) => {
     const rawPath = req.query.path;
-
     if (!rawPath) {
         return res.unprocessableEntity(PATH_IS_REQUIRED);
     }
@@ -21,7 +20,6 @@ export const showFileContent: Handler<ShowFileContentResult, { Querystring: Path
     const path = normalizeResult.path;
 
     try {
-        // Try to get from cache first
         const cacheKey = cacheKeys.fileContent(path);
         const cachedContent = await getCache<ShowFileContentResult>(cacheKey);
 
@@ -29,23 +27,47 @@ export const showFileContent: Handler<ShowFileContentResult, { Querystring: Path
             return res.status(200).send(cachedContent);
         }
 
-        // If not in cache, get from database
-        const file = await prisma.content.findFirst({
-            where: {
-                path
-            },
+        // Step 1: Get file metadata from File model (not Content)
+        const fileMeta = await prisma.file.findUnique({
+            where: { path },
+            select: {
+                type: true,
+                targetPath: true
+            }
+        });
+
+        if (!fileMeta) {
+            return res.status(400).send({ message: FILE_NOT_FOUND });
+        }
+
+        // If it's a symlink, use targetPath to query content
+        const actualPath = fileMeta.type === 'SYMLINK' && fileMeta.targetPath
+            ? fileMeta.targetPath
+            : path;
+
+        // Step 2: Query data from Content using actualPath
+        const fileContent = await prisma.content.findUnique({
+            where: { path: actualPath },
+
             select: {
                 data: true
             }
         });
 
-        if (file) {
-            // Cache the result before returning
-            await setCache(cacheKey, file, redisConfig.ttl.fileContent);
-            return res.status(200).send(file);
-        } else {
+        if (!fileContent) {
             return res.status(400).send({ message: FILE_NOT_FOUND });
         }
+
+        // Return structured response with file information
+        const file = res.status(200).send({
+            data: fileContent.data,
+            type: fileMeta.type,
+            isSymlink: fileMeta.type === 'SYMLINK',
+            targetPath: fileMeta.targetPath ?? null
+        });
+
+        await setCache(cacheKey, file, redisConfig.ttl.fileContent);
+        return res.status(200).send(file);
     } catch (err) {
         logger.error(err);
         return res.internalServerError();

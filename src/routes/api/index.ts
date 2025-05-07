@@ -1,3 +1,13 @@
+import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
+import {
+    CreateFileDirectoryBody,
+    FindFileDirectoryQueryStrings,
+    MoveFileDirectoryBody,
+    PathQueryStrings,
+    RemoveFileDirectory,
+    UpdateFileDirectoryBody
+} from '@dtos/in';
+import { CacheStatsResult, CreateFileDirectoryResult, ListDirectoryItem, ResetCacheStatsResult, ShowFileContentResult, SingleMessageResult } from '@dtos/out';
 import {
     changeDirectory,
     createFileDirectory,
@@ -10,25 +20,9 @@ import {
     showFileContent,
     updateFileDirectory
 } from '@handlers';
-import {
-    PathQueryStrings,
-    CreateFileDirectoryBody,
-    UpdateFileDirectoryBody,
-    RemoveFileDirectory,
-    MoveFileDirectoryBody,
-    FindFileDirectoryQueryStrings
-} from '@dtos/in';
-import { createRoute } from '@utils';
+import { FileType } from '@prisma/client';
 import { Type } from '@sinclair/typebox';
-import { DIRECTORY_NOT_FOUND, FILE_NOT_FOUND } from '@constants';
-import {
-    CacheStatsResult,
-    CreateFileDirectoryResult,
-    ListDirectoryItem,
-    ResetCacheStatsResult,
-    ShowFileContentResult,
-    SingleMessageResult
-} from '@dtos/out';
+import { createRoute } from '@utils';
 
 export const apiRoute = createRoute('Api', [
     {
@@ -48,7 +42,7 @@ export const apiRoute = createRoute('Api', [
         method: 'POST',
         url: '/cr',
         schema: {
-            summary: 'Create new file or directory',
+            summary: 'Create new file, directory, or symlink',
             body: CreateFileDirectoryBody,
             response: {
                 200: CreateFileDirectoryResult,
@@ -56,6 +50,27 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: createFileDirectory
+    },
+    {
+        method: 'POST',
+        url: '/ln',
+        schema: {
+            summary: 'Create symbolic link',
+            body: Type.Object({
+                targetPath: Type.String(),
+                path: Type.String(),
+                shouldCreateParent: Type.Optional(Type.Boolean({ default: false }))
+            }),
+            response: {
+                200: SingleMessageResult,
+                400: Type.Object({ message: Type.String() })
+            }
+        },
+        handler: async (req, res) => {
+            // Sửa request để sử dụng lại handler createFileDirectory
+            req.body.type = FileType.SYMLINK;
+            return createFileDirectory(req, res);
+        }
     },
     {
         method: 'GET',
