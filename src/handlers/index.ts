@@ -11,4 +11,5 @@ export * from './api/listDirectoryItems.handler';
 export * from './api/moveFileDirectory';
 export * from './api/removeFileDirectory.handler';
 export * from './api/showFileContent.handler';
+export * from './api/symbolLink.handler';
 export * from './api/updateFileDirectory.handler';

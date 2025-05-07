@@ -1,6 +1,7 @@
 import {
     changeDirectory,
     createFileDirectory,
+    createSymLinkItems,
     findDirectoryItems,
     getCacheStats,
     listDirectoryItems,
@@ -82,6 +83,23 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: listDirectoryItems
+    },
+    {
+        method: 'POST',
+        url: '/ln',
+        schema: {
+            summary: 'Create symbolic link',
+            body: Type.Object({
+                targetPath: Type.String(),
+                path: Type.String(),
+                shouldCreateParent: Type.Optional(Type.Boolean({ default: false }))
+            }),
+            response: {
+                200: SingleMessageResult,
+                400: Type.Object({ message: Type.String() })
+            }
+        },
+        handler: createSymLinkItems
     },
     {
         method: 'GET',
