@@ -7,3 +7,4 @@ export * from './createFileDirectory.dto';
 export * from './listDirectoryItem.dto';
 export * from './showFileContent.dto';
 export * from './singleMessage';
+export * from './symbolLink.dto';
