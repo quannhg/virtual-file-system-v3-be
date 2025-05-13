@@ -29,7 +29,8 @@ import {
     ListDirectoryItem,
     ResetCacheStatsResult,
     ShowFileContentResult,
-    SingleMessageResult
+    SingleMessageResult,
+    GrepFileResult
 } from '@dtos/out';
 
 export const apiRoute = createRoute('Api', [
@@ -92,7 +93,7 @@ export const apiRoute = createRoute('Api', [
             summary: 'Search files by content and path',
             querystring: GrepFileQueryStrings,
             response: {
-                200: Type.Array(Type.String()),
+                200: Type.Array(GrepFileResult), // ✅ Sửa thành DTO bạn đã định nghĩa
                 400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
             }
         },

@@ -1,0 +1,14 @@
+{
+  "folders": [
+	{
+		"path": "../fe-dbms"
+	},
+	{
+		"path": "."
+	},
+	{
+		"path": "../Virtual-file-system-v3-fe-main"
+	}
+],
+  "settings": {}
+}

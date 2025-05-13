@@ -4,6 +4,7 @@
 
 export * from './cacheStats.dto';
 export * from './createFileDirectory.dto';
+export * from './grepFileResult.dto';
 export * from './listDirectoryItem.dto';
 export * from './showFileContent.dto';
 export * from './singleMessage';
