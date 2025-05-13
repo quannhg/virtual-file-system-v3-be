@@ -7,6 +7,7 @@ export * from './api/cacheStats.handler';
 export * from './api/changeDirectory.handler';
 export * from './api/createFileDirectory.handler';
 export * from './api/findFileDirectory.handler';
+export * from './api/grepFile.handler';
 export * from './api/listDirectoryItems.handler';
 export * from './api/moveFileDirectory';
 export * from './api/removeFileDirectory.handler';

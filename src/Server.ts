@@ -3,8 +3,8 @@ import { envs, logger, swaggerConfig, swaggerUIConfig } from '@configs';
 import { redisConfig } from '@configs/redis';
 import { customErrorHandler } from '@handlers';
 import { apiRoute } from './routes/api';
-
-export function createServer(config: ServerConfig): FastifyInstance {
+import cors from '@fastify/cors';
+export async function createServer(config: ServerConfig): Promise<FastifyInstance> {
     const app = fastify({
         logger: envs.isTest ? undefined : logger,
         disableRequestLogging: !envs.isDev
@@ -12,10 +12,10 @@ export function createServer(config: ServerConfig): FastifyInstance {
 
     app.register(import('@fastify/sensible'));
     app.register(import('@fastify/helmet'));
-    app.register(import('@fastify/cors'), {
+    await app.register(cors, {
         origin: envs.CORS_WHITE_LIST,
         credentials: true
-    });
+      });
 
     // Register Redis plugin
     app.register(import('@fastify/redis'), {

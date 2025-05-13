@@ -1,14 +1,15 @@
 import {
     changeDirectory,
     createFileDirectory,
-    findDirectoryItems,
+    grepFiles,
     getCacheStats,
     listDirectoryItems,
     moveFileDirectory,
     removeFileDirectory,
     resetCacheStats,
     showFileContent,
-    updateFileDirectory
+    updateFileDirectory,
+    findDirectoryItems
 } from '@handlers';
 import {
     PathQueryStrings,
@@ -16,6 +17,7 @@ import {
     UpdateFileDirectoryBody,
     RemoveFileDirectory,
     MoveFileDirectoryBody,
+    GrepFileQueryStrings,
     FindFileDirectoryQueryStrings
 } from '@dtos/in';
 import { createRoute } from '@utils';
@@ -85,16 +87,16 @@ export const apiRoute = createRoute('Api', [
     },
     {
         method: 'GET',
-        url: '/find',
+        url: '/grep',
         schema: {
-            summary: 'Find all items in directory',
-            querystring: FindFileDirectoryQueryStrings,
+            summary: 'Search files by content and path',
+            querystring: GrepFileQueryStrings,
             response: {
                 200: Type.Array(Type.String()),
                 400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
             }
         },
-        handler: findDirectoryItems
+        handler: grepFiles
     },
     {
         method: 'PUT',
@@ -158,5 +160,18 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: resetCacheStats
+    },
+    {
+        method: 'GET',
+        url: '/find',
+        schema: {
+            summary: 'Find all items in directory',
+            querystring: FindFileDirectoryQueryStrings,
+            response: {
+                200: Type.Array(Type.String()),
+                400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
+            }
+        },
+        handler: findDirectoryItems
     }
 ]);
