@@ -95,26 +95,51 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
                 result.push({
                     name: itemName,
                     createAt: moment(directFile.createdAt).toString(),
+                    type: FileType.RAW_FILE,
                     size: directFile.Content.length > 0 ? directFile.Content[0].data.length : 0
                 });
-            } else {
-                const folderSizeResult: { size: string }[] =
-                    await prisma.$queryRaw`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE CONCAT(${itemPath}, '/', '%')`;
 
-                const firstFolderItem = await prisma.file.findFirst({
-                    where: {
-                        path: { startsWith: itemPath },
-                        type: FileType.DIRECTORY
-                    },
-                    orderBy: { createdAt: 'asc' }
-                });
-
-                result.push({
-                    name: itemName + '/',
-                    createAt: (firstFolderItem && moment(firstFolderItem.createdAt).toString()) || '0',
-                    size: Number(folderSizeResult[0]?.size) || 0
-                });
+                continue;
             }
+
+            //symlink
+            const symlinkFile = await prisma.file.findFirst({
+                where: { path: itemPath, type: FileType.SYMLINK },
+                select: {
+                    createdAt: true,
+                    targetPath: true
+                }
+            });
+
+            if (symlinkFile) {
+                result.push({
+                    name: itemName + ' → ' + symlinkFile.targetPath,
+                    type: FileType.SYMLINK,
+                    createAt: moment(symlinkFile.createdAt).toString(),
+                    size: 0
+                });
+
+                continue;
+            }
+
+            // directory
+            const folderSizeResult: { size: string }[] =
+                await prisma.$queryRaw`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE CONCAT(${itemPath}, '/', '%')`;
+
+            const firstFolderItem = await prisma.file.findFirst({
+                where: {
+                    path: { startsWith: itemPath },
+                    type: FileType.DIRECTORY
+                },
+                orderBy: { createdAt: 'asc' }
+            });
+
+            result.push({
+                name: itemName + '/',
+                type: FileType.DIRECTORY,
+                createAt: (firstFolderItem && moment(firstFolderItem.createdAt).toString()) || '0',
+                size: Number(folderSizeResult[0]?.size) || 0
+            });
         }
 
         // Cache the result before returning
