@@ -9,7 +9,8 @@ import {
     removeFileDirectory,
     resetCacheStats,
     showFileContent,
-    updateFileDirectory
+    updateFileDirectory,
+    grepFiles
 } from '@handlers';
 import {
     PathQueryStrings,
@@ -17,7 +18,8 @@ import {
     UpdateFileDirectoryBody,
     RemoveFileDirectory,
     MoveFileDirectoryBody,
-    FindFileDirectoryQueryStrings
+    FindFileDirectoryQueryStrings,
+    GrepFileQueryStrings
 } from '@dtos/in';
 import { createRoute } from '@utils';
 import { Type } from '@sinclair/typebox';
@@ -28,7 +30,8 @@ import {
     ListDirectoryItem,
     ResetCacheStatsResult,
     ShowFileContentResult,
-    SingleMessageResult
+    SingleMessageResult,
+    GrepFileResult
 } from '@dtos/out';
 
 export const apiRoute = createRoute('Api', [
@@ -176,5 +179,18 @@ export const apiRoute = createRoute('Api', [
             }
         },
         handler: resetCacheStats
+    },
+    {
+        method: 'GET',
+        url: '/grep',
+        schema: {
+            summary: 'Search files by content and path',
+            querystring: GrepFileQueryStrings,
+            response: {
+                200: Type.Array(GrepFileResult), // ✅ Sửa thành DTO bạn đã định nghĩa
+                400: Type.Object({ message: Type.String({ default: DIRECTORY_NOT_FOUND }) })
+            }
+        },
+        handler: grepFiles
     }
 ]);
