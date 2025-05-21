@@ -3,9 +3,9 @@ import { FILE_NOT_FOUND, FILE_OR_DIRECTORY_NOT_FOUND } from '@constants';
 import { UpdateFileDirectoryBody } from '@dtos/in';
 import { SingleMessageResult } from '@dtos/out';
 import { Handler } from '@interfaces';
-import { FileType } from '@prisma/client';
+import { FileType, Prisma } from '@prisma/client'; // Added Prisma
 import { prisma } from '@repositories';
-import { normalizePath, invalidateFileCache, invalidateDirectoryCache, deleteCache, cacheKeys, getParentPath } from '@utils';
+import { normalizePath, invalidateFileCache, invalidateDirectoryCache, getParentPath, getLastSegment } from '@utils'; // Removed deleteCache, cacheKeys
 import path from 'path';
 import { appendPath } from 'src/utils/appendPath';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
@@ -65,7 +65,9 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
                         path: oldPath
                     },
                     data: {
-                        path: newPath
+                        path: newPath,
+                        name: getLastSegment(newPath), // Update name
+                        size: newData.length // Update size
                     }
                 });
 
@@ -128,7 +130,8 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
                             path: item.path
                         },
                         data: {
-                            path: absoluteNewPath
+                            path: absoluteNewPath,
+                            name: getLastSegment(absoluteNewPath) // Update name
                         }
                     });
 
@@ -139,9 +142,9 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
                     }
 
                     // Invalidate cache for each updated path
-                    await invalidateFileCache(item.path);
+                    await invalidateFileCache(oldPath);
                     await invalidateFileCache(absoluteNewPath);
-                    await invalidateDirectoryCache(path.dirname(item.path));
+                    await invalidateDirectoryCache(path.dirname(oldPath));
                     await invalidateDirectoryCache(path.dirname(absoluteNewPath));
 
                     // Invalidate cache for the parent directory to ensure ls shows the new file/directory
@@ -165,7 +168,7 @@ export const updateFileDirectory: Handler<SingleMessageResult, { Body: UpdateFil
  * @param oldTargetPath - The old path that symlinks are pointing to
  * @param newTargetPath - The new path that symlinks should point to
  */
-async function updateSymlinksPointingTo(prismaClient: any, oldTargetPath: string, newTargetPath: string) {
+async function updateSymlinksPointingTo(prismaClient: Prisma.TransactionClient, oldTargetPath: string, newTargetPath: string) {
     // Find all symlinks that point to the old path
     const symlinks = await prismaClient.file.findMany({
         where: {
