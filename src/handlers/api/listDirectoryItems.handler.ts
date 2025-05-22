@@ -71,7 +71,9 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
                 path: true,
                 createdAt: true,
                 type: true,
-                Content: true
+                name: true,
+                size: true,
+                content: true
             }
         });
 
@@ -85,7 +87,8 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
                 select: {
                     path: true,
                     createdAt: true,
-                    Content: { select: { data: true } }
+                    name: true,
+                    size: true
                 }
             });
 
@@ -93,10 +96,10 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
 
             if (directFile) {
                 result.push({
-                    name: itemName,
+                    name: directFile.name,
                     createAt: moment(directFile.createdAt).toString(),
                     type: FileType.RAW_FILE,
-                    size: directFile.Content.length > 0 ? directFile.Content[0].data.length : 0
+                    size: directFile.size ?? 0
                 });
 
                 continue;
@@ -107,16 +110,18 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
                 where: { path: itemPath, type: FileType.SYMLINK },
                 select: {
                     createdAt: true,
-                    targetPath: true
+                    targetPath: true,
+                    name: true,
+                    size: true
                 }
             });
 
             if (symlinkFile) {
                 result.push({
-                    name: itemName + ' → ' + symlinkFile.targetPath,
+                    name: symlinkFile.name + ' → ' + symlinkFile.targetPath,
                     type: FileType.SYMLINK,
                     createAt: moment(symlinkFile.createdAt).toString(),
-                    size: 0
+                    size: symlinkFile.size ?? 0
                 });
 
                 continue;
@@ -126,18 +131,18 @@ export const listDirectoryItems: Handler<ListDirectoryItem[], { Querystring: Pat
             const folderSizeResult: { size: string }[] =
                 await prisma.$queryRaw`SELECT SUM(CHAR_LENGTH(data)) AS size FROM Content WHERE path LIKE CONCAT(${itemPath}, '/', '%')`;
 
-            const firstFolderItem = await prisma.file.findFirst({
-                where: {
-                    path: { startsWith: itemPath },
-                    type: FileType.DIRECTORY
-                },
-                orderBy: { createdAt: 'asc' }
+            const directoryEntry = await prisma.file.findUnique({
+                where: { path: itemPath },
+                select: {
+                    name: true,
+                    createdAt: true
+                }
             });
 
             result.push({
-                name: itemName + '/',
+                name: (directoryEntry?.name ?? itemName) + '/',
                 type: FileType.DIRECTORY,
-                createAt: (firstFolderItem && moment(firstFolderItem.createdAt).toString()) || '0',
+                createAt: (directoryEntry && moment(directoryEntry.createdAt).toString()) || '0',
                 size: Number(folderSizeResult[0]?.size) || 0
             });
         }

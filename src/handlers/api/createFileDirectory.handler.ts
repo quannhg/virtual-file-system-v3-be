@@ -5,7 +5,7 @@ import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
-import { getParentPath, normalizePath, invalidateDirectoryCache, invalidateFileCache, resolveFullPath } from '@utils';
+import { getParentPath, normalizePath, invalidateDirectoryCache, invalidateFileCache, getLastSegment } from '@utils';
 import { PATH_IS_REQUIRED } from '@constants';
 
 export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: CreateFileDirectoryBody }> = async (req, res) => {
@@ -19,7 +19,8 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
     if (normalizeResult.invalid) {
         return res.badRequest(normalizeResult.message);
     }
-    let newPath = normalizeResult.path;
+    const newPath = normalizeResult.path;
+    const itemName = getLastSegment(newPath);
 
     try {
         if (!shouldCreateParent) {
@@ -40,8 +41,9 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
             ? prisma.file.create({
                   data: {
                       path: newPath,
+                      name: itemName,
                       type: FileType.RAW_FILE,
-                      Content: {
+                      content: {
                           create: {
                               data
                           }
@@ -51,6 +53,7 @@ export const createFileDirectory: Handler<CreateFileDirectoryResult, { Body: Cre
             : prisma.file.create({
                   data: {
                       path: newPath,
+                      name: itemName,
                       type: FileType.DIRECTORY
                   }
               }));

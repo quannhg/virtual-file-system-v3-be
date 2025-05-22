@@ -5,7 +5,7 @@ import { SymbolLinkResult } from '@dtos/out';
 import { Handler } from '@interfaces';
 import { FileType } from '@prisma/client';
 import { prisma } from '@repositories';
-import { getParentPath, invalidateDirectoryCache, normalizePath } from '@utils';
+import { getParentPath, invalidateDirectoryCache, normalizePath, getLastSegment } from '@utils';
 import { checkExistingPath } from 'src/utils/checkExistingPath';
 
 export const createSymLinkItems: Handler<SymbolLinkResult, { Body: SymbolLinkBody }> = async (req, res) => {
@@ -20,6 +20,7 @@ export const createSymLinkItems: Handler<SymbolLinkResult, { Body: SymbolLinkBod
         return res.badRequest(normalizeResult.message);
     }
     const newPath = normalizeResult.path;
+    const itemName = getLastSegment(newPath);
 
     try {
         if (!shouldCreateParent) {
@@ -39,6 +40,7 @@ export const createSymLinkItems: Handler<SymbolLinkResult, { Body: SymbolLinkBod
         await prisma.file.create({
             data: {
                 path: newPath,
+                name: itemName,
                 type: FileType.SYMLINK,
                 targetPath: targetPath
             }

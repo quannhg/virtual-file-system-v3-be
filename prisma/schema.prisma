@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -16,11 +10,13 @@ datasource db {
 }
 
 model File {
-  path      String    @id
-  type      FileType
-  createdAt DateTime  @default(now())
+  path       String   @id
+  type       FileType
+  createdAt  DateTime @default(now())
   targetPath String?
-  Content   Content[]
+  name       String
+  size       Int?
+  content    Content? @relation("FileContent")
 
   @@index([path])
 }
@@ -28,7 +24,7 @@ model File {
 model Content {
   path String @id
   data String
-  file File   @relation(fields: [path], references: [path])
+  file File   @relation("FileContent", fields: [path], references: [path])
 
   @@index([path])
 }
@@ -37,10 +33,4 @@ enum FileType {
   RAW_FILE
   DIRECTORY
   SYMLINK
-}
-
-enum Gender {
-  MALE
-  FEMALE
-  OTHER
 }
