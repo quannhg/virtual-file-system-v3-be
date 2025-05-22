@@ -1,0 +1,36 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("MYSQL_URL")
+  relationMode = "foreignKeys"
+}
+
+model File {
+  path       String   @id
+  type       FileType
+  createdAt  DateTime @default(now())
+  targetPath String?
+  name       String
+  size       Int?
+  content    Content? @relation("FileContent")
+
+  @@index([path])
+}
+
+model Content {
+  path String @id
+  data String
+  file File   @relation("FileContent", fields: [path], references: [path])
+
+  @@index([path])
+}
+
+enum FileType {
+  RAW_FILE
+  DIRECTORY
+  SYMLINK
+}

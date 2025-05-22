@@ -1,0 +1,28 @@
+version: '3.5'
+services:
+    mysql:
+        image: mysql:8.0
+        container_name: virtual-file-system-mysql-2
+        environment:
+            MYSQL_ROOT_PASSWORD: root123
+            MYSQL_DATABASE: dbms
+        ports:
+            - 3307:3306
+        volumes:
+            - mysql_db:/var/lib/mysql
+        restart: always
+
+    redis:
+        image: redis:7-alpine
+        container_name: virtual-file-system-redis-2
+        ports:
+            - '6379:6379'
+        volumes:
+            - redis_data:/data
+        restart: always
+        command: redis-server --save 60 1 --loglevel warning
+
+volumes:
+    mysql_db:
+    redis_data:
+    data:
